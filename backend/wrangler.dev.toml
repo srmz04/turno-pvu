@@ -1,0 +1,16 @@
+# Development environment
+name = "turno-pvu-backend-dev"
+main = "worker.js"
+compatibility_date = "2024-01-29"
+
+[vars]
+ENVIRONMENT = "development"
+
+[[d1_databases]]
+binding = "TURNO_PVU_DB"
+database_name = "turno-pvu-db-dev"
+database_id = ""
+
+[[kv_namespaces]]
+binding = "TURNO_PVU_CACHE"
+id = ""

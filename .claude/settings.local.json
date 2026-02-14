@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Bash(/home/uy/Dropbox/srmz04/TURNO-PVU/.gitignore:*)",
+      "Bash(/home/uy/Dropbox/srmz04/TURNO-PVU/.env.example:*)",
+      "Bash(/home/uy/Dropbox/srmz04/TURNO-PVU/backend/package.json:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+# Production environment
+name = "turno-pvu-backend"
+main = "worker.js"
+compatibility_date = "2024-01-29"
+
+[vars]
+ENVIRONMENT = "production"
+
+[[d1_databases]]
+binding = "TURNO_PVU_DB"
+database_name = "turno-pvu-db"
+database_id = ""
+
+[[kv_namespaces]]
+binding = "TURNO_PVU_CACHE"
+id = ""
+
+[observability]
+enabled = true
+
+[limits]
+cpu_ms = 50
