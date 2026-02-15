@@ -31,7 +31,7 @@ class AplicadorApp {
         try {
             // Verificar autenticación
             if (!auth.isAuthenticated()) {
-                window.location.href = '../index.html';
+                window.location.href = '../registro/index.html';
                 return;
             }
 
@@ -41,7 +41,7 @@ class AplicadorApp {
             const allowedRoles = [CONFIG.ROLES.APLICADOR, CONFIG.ROLES.COORDINADOR, CONFIG.ROLES.ADMIN];
             if (!allowedRoles.includes(this.state.user.rol)) {
                 showToast('Acceso denegado. Solo para APLICADOR o superior.', 'error');
-                setTimeout(() => window.location.href = '../index.html', 2000);
+                setTimeout(() => window.location.href = '../registro/index.html', 2000);
                 return;
             }
 
