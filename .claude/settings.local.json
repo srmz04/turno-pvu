@@ -22,7 +22,9 @@
       "Bash(npx wrangler pages project list:*)",
       "Bash(node scripts/generate-compatible-hashes.js:*)",
       "Bash(node -c:*)",
-      "Bash(jq:*)"
+      "Bash(jq:*)",
+      "Bash(find:*)",
+      "Bash(git fetch:*)"
     ]
   }
 }
