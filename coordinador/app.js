@@ -16,7 +16,8 @@ class CoordinadorApp {
 
         this.state = {
             user: null,
-            vistaActual: 'monitor', // monitor | abrir | dispositivos | bloques | cortes | fichas | cerrar
+            user: null,
+            vistaActual: auth.isAuthenticated() ? 'monitor' : 'login', // Inicializar según auth
             turnoActivo: null,
             fichas: [],
             dispositivos: [],
@@ -45,7 +46,8 @@ class CoordinadorApp {
         try {
             // Verificar autenticación
             if (!auth.isAuthenticated()) {
-                window.location.href = '../registro/index.html';
+                // Ya no redirigir
+                this.render();
                 return;
             }
 
@@ -55,7 +57,9 @@ class CoordinadorApp {
             const allowedRoles = [CONFIG.ROLES.COORDINADOR, CONFIG.ROLES.ADMIN];
             if (!allowedRoles.includes(this.state.user.rol)) {
                 showToast('Acceso denegado. Solo para COORDINADOR o ADMIN.', 'error');
-                setTimeout(() => window.location.href = '../registro/index.html', 2000);
+                auth.logout();
+                this.state.vistaActual = 'login';
+                this.render();
                 return;
             }
 
@@ -105,7 +109,8 @@ class CoordinadorApp {
     async cargarTurnoActivo() {
         try {
             const centroId = this.state.user.centroId;
-            const turno = await api.get(`/turnos/activo/${centroId}`);
+            const response = await api.get(`/turnos/activo/${centroId}`);
+            const turno = response.turno;
 
             if (turno && turno.abierto) {
                 this.state.turnoActivo = turno;
@@ -194,6 +199,18 @@ class CoordinadorApp {
 
         } catch (error) {
             console.error('Error abriendo turno:', error);
+
+            // Manejo especifico para turno ya abierto (409)
+            if (error.message && (error.message.includes('abierto') || error.message.includes('Conflict'))) {
+                showToast('El turno ya se encuentra abierto. Actualizando...', 'info');
+                await this.cargarDatos();
+                if (this.state.turnoActivo) {
+                    this.cambiarVista('monitor');
+                    this.render();
+                }
+                return;
+            }
+
             showToast(error.message || 'Error al abrir turno', 'error');
         }
     }
@@ -466,6 +483,18 @@ class CoordinadorApp {
     render() {
         const container = document.getElementById('main-container');
 
+        // Si es vista LOGIN, renderizar solo el login sin header/nav
+        if (this.state.vistaActual === 'login') {
+            container.innerHTML = this.renderLogin();
+
+            const loginForm = document.getElementById('login-form');
+            if (loginForm) {
+                loginForm.addEventListener('submit', (e) => this.handleLogin(e));
+            }
+            return;
+        }
+
+        // Vista normal con header y navegación
         container.innerHTML = `
             <div class="coordinador-main">
                 ${this.renderHeader()}
@@ -525,6 +554,8 @@ class CoordinadorApp {
 
     renderVistaActual() {
         switch (this.state.vistaActual) {
+            case 'login':
+                return this.renderLogin();
             case 'abrir':
                 return this.renderVistaAbrirTurno();
             case 'monitor':
@@ -541,6 +572,56 @@ class CoordinadorApp {
                 return this.renderVistaCerrarTurno();
             default:
                 return '<p>Vista no encontrada</p>';
+        }
+    }
+
+    renderLogin() {
+        return `
+            <div class="login-container" style="max-width: 400px; margin: 50px auto; padding: 20px;">
+                <div class="card">
+                    <h2 style="text-align: center; margin-bottom: 2rem; color: var(--primary);">Coordinación PVU</h2>
+                    <form id="login-form">
+                        <div class="form-group">
+                            <label>Usuario</label>
+                            <input type="text" id="login-username" class="giant-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Contraseña</label>
+                            <input type="password" id="login-password" class="giant-input" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-large" style="width: 100%;">Ingresar</button>
+                    </form>
+                </div>
+            </div>
+        `;
+    }
+
+    async handleLogin(e) {
+        e.preventDefault();
+        const username = document.getElementById('login-username').value;
+        const password = document.getElementById('login-password').value;
+
+        try {
+            const result = await auth.login(username, password);
+            if (result.success) {
+                const user = result.user;
+                const allowedRoles = ['COORDINADOR', 'ADMIN'];
+
+                if (allowedRoles.includes(user.rol)) {
+                    this.state.user = user;
+                    this.state.vistaActual = 'monitor';
+                    // Recargar datos y renderizar interfaz completa
+                    await this.init(); // Re-ejecutar init completo
+                } else {
+                    showToast('Rol no autorizado para este módulo', 'error');
+                    auth.logout();
+                }
+            } else {
+                showToast(result.error || 'Credenciales inválidas', 'error');
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            showToast('Error de conexión', 'error');
         }
     }
 

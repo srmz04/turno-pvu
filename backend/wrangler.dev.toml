@@ -5,12 +5,14 @@ compatibility_date = "2024-01-29"
 
 [vars]
 ENVIRONMENT = "development"
+JWT_SECRET = "dev-secret-key-turno-pvu-2026-02-14-very-long-secret-for-development-only"
 
 [[d1_databases]]
 binding = "TURNO_PVU_DB"
 database_name = "turno-pvu-db-dev"
-database_id = ""
+database_id = "e52e89a3-1730-4eeb-b097-ce80890b1c12"
 
-[[kv_namespaces]]
-binding = "TURNO_PVU_CACHE"
-id = ""
+# KV namespace comentado temporalmente hasta crear el namespace
+# [[kv_namespaces]]
+# binding = "TURNO_PVU_CACHE"
+# id = ""

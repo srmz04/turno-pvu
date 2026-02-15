@@ -9,7 +9,7 @@ ENVIRONMENT = "staging"
 [[d1_databases]]
 binding = "TURNO_PVU_DB"
 database_name = "turno-pvu-db-staging"
-database_id = ""
+database_id = "9299c5ac-6f7a-4cee-964c-078ee4270425"
 
 [[kv_namespaces]]
 binding = "TURNO_PVU_CACHE"

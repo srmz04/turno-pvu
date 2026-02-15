@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Dashboard Administrativo - TURNO-PVU">
+    <title>Dashboard Admin - TURNO-PVU</title>
+
+    <link rel="stylesheet" href="../shared/styles-base.css">
+    <link rel="stylesheet" href="./styles.css">
+    <link rel="manifest" href="./manifest.json">
+
+    <meta name="theme-color" content="#667eea">
+</head>
+
+<body>
+    <!-- Header (Oculto en Login) -->
+    <header id="main-header" class="header" style="display: none;">
+        <div class="container">
+            <h1>🏥 Dashboard Administrativo</h1>
+            <p class="subtitle">Coordinación General - TURNO-PVU</p>
+            <div class="header-actions">
+                <span id="user-info" class="user-info"></span>
+                <button id="logout-btn" class="btn-logout">Cerrar Sesión</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navegación por pestañas (Oculto en Login) -->
+    <nav id="main-nav" class="tabs" style="display: none;">
+        <div class="container">
+            <button class="tab-btn active" data-view="dashboard">📊 Dashboard</button>
+            <button class="tab-btn" data-view="reportes">📈 Reportes</button>
+            <button class="tab-btn" data-view="usuarios">👥 Usuarios</button>
+            <button class="tab-btn" data-view="centros">🏥 Centros</button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+
+            <!-- Vista: Login -->
+            <div id="view-login" class="view active">
+                <div class="login-container"
+                    style="max-width: 400px; margin: 50px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <h2 style="text-align: center; margin-bottom: 20px; color: var(--primary-dark);">Acceso
+                        Administrativo</h2>
+                    <form id="login-form">
+                        <div class="form-group">
+                            <label for="login-username">Usuario</label>
+                            <input type="text" id="login-username" required autocomplete="username">
+                        </div>
+                        <div class="form-group">
+                            <label for="login-password">Contraseña</label>
+                            <input type="password" id="login-password" required autocomplete="current-password">
+                        </div>
+                        <button type="submit" class="btn-primary btn-large" style="width: 100%;">Iniciar Sesión</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Vista: Dashboard Principal -->
+            <div id="view-dashboard" class="view">
+
+                <!-- KPIs Consolidados -->
+                <section class="kpis-section">
+                    <h2>📊 Resumen General</h2>
+                    <div class="kpis-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-icon">💉</div>
+                            <div class="kpi-value" id="total-srp">0</div>
+                            <div class="kpi-label">SRP Aplicadas Hoy</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon">💉</div>
+                            <div class="kpi-value" id="total-sr">0</div>
+                            <div class="kpi-label">SR Aplicadas Hoy</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon">💉</div>
+                            <div class="kpi-value" id="total-vph">0</div>
+                            <div class="kpi-label">VPH Aplicadas Hoy</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon">🏥</div>
+                            <div class="kpi-value" id="centros-activos">0</div>
+                            <div class="kpi-label">Centros Operando</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Filtros -->
+                <section class="filters-section">
+                    <div class="filters-row">
+                        <div class="filter-group">
+                            <label for="filtro-municipio">📍 Municipio:</label>
+                            <select id="filtro-municipio">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="filtro-estado">🚦 Estado:</label>
+                            <select id="filtro-estado">
+                                <option value="">Todos</option>
+                                <option value="verde">🟢 Verde (>20%)</option>
+                                <option value="amarillo">🟡 Amarillo (≤20%)</option>
+                                <option value="rojo">🔴 Rojo (Agotado)</option>
+                            </select>
+                        </div>
+                        <button id="refresh-dashboard" class="btn-refresh">🔄 Actualizar</button>
+                    </div>
+                    <div class="auto-refresh">
+                        <span id="auto-refresh-status">Auto-refresh en: <span id="countdown">60</span>s</span>
+                    </div>
+                </section>
+
+                <!-- Tabla de Centros -->
+                <section class="centros-section">
+                    <h2>🏥 Estado de Centros (15 total)</h2>
+                    <div class="table-wrapper">
+                        <table id="centros-table" class="centros-table">
+                            <thead>
+                                <tr>
+                                    <th>Estado</th>
+                                    <th>Centro</th>
+                                    <th>Municipio</th>
+                                    <th>SRP</th>
+                                    <th>SR</th>
+                                    <th>VPH</th>
+                                    <th>Aplicadas</th>
+                                    <th>Turno</th>
+                                </tr>
+                            </thead>
+                            <tbody id="centros-tbody">
+                                <!-- Filas dinámicas -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- Vista: Reportes -->
+            <div id="view-reportes" class="view">
+                <section class="reportes-section">
+                    <h2>📈 Exportar Reportes</h2>
+
+                    <div class="reporte-card">
+                        <h3>📊 Reporte de Vacunación por Centro</h3>
+                        <p>Incluye: Fichas emitidas/aplicadas por centro, SRP/SR/VPH, rechazos, captación VPH</p>
+                        <div class="reporte-filters">
+                            <div class="filter-group">
+                                <label for="fecha-inicio">Desde:</label>
+                                <input type="date" id="fecha-inicio">
+                            </div>
+                            <div class="filter-group">
+                                <label for="fecha-fin">Hasta:</label>
+                                <input type="date" id="fecha-fin">
+                            </div>
+                        </div>
+                        <button id="exportar-vacunacion" class="btn-export">📥 Descargar CSV</button>
+                    </div>
+
+                    <div class="reporte-card">
+                        <h3>📉 Reporte de Rechazos por Edad</h3>
+                        <p>Incluye: Rechazos por edad, motivos, distribución por centro</p>
+                        <button id="exportar-rechazos" class="btn-export">📥 Descargar CSV</button>
+                    </div>
+
+                    <div class="reporte-card">
+                        <h3>💉 Reporte de Captación VPH</h3>
+                        <p>Incluye: Elegibles vs captados vs perdidos por desabasto</p>
+                        <button id="exportar-vph" class="btn-export">📥 Descargar CSV</button>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Vista: Gestión de Usuarios -->
+            <div id="view-usuarios" class="view">
+                <section class="usuarios-section">
+                    <h2>👥 Gestión de Usuarios</h2>
+
+                    <button id="crear-usuario-btn" class="btn-primary">➕ Crear Usuario</button>
+
+                    <div class="table-wrapper">
+                        <table class="usuarios-table">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Nombre</th>
+                                    <th>Rol</th>
+                                    <th>Centro</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usuarios-tbody">
+                                <!-- Filas dinámicas -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Vista: Gestión de Centros -->
+            <div id="view-centros" class="view">
+                <section class="admin-centros-section">
+                    <h2>🏥 Gestión de Centros de Salud</h2>
+
+                    <button id="crear-centro-btn" class="btn-primary">➕ Crear Centro</button>
+
+                    <div class="table-wrapper">
+                        <table class="admin-centros-table">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Nombre</th>
+                                    <th>Municipio</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-centros-tbody">
+                                <!-- Filas dinámicas -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Modals -->
+
+    <!-- Modal: Crear/Editar Usuario -->
+    <div id="modal-usuario" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-usuario-title">Crear Usuario</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-usuario">
+                    <div class="form-group">
+                        <label for="usuario-username">Usuario (login):</label>
+                        <input type="text" id="usuario-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="usuario-nombre">Nombre completo:</label>
+                        <input type="text" id="usuario-nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="usuario-password">Contraseña:</label>
+                        <input type="password" id="usuario-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="usuario-rol">Rol:</label>
+                        <select id="usuario-rol" required>
+                            <option value="REGISTRADOR">Registrador</option>
+                            <option value="APLICADOR">Aplicador</option>
+                            <option value="COORDINADOR">Coordinador</option>
+                            <option value="ADMIN">Administrador</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="usuario-centro">Centro asignado:</label>
+                        <select id="usuario-centro">
+                            <option value="">Sin asignar</option>
+                        </select>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn-primary">Guardar</button>
+                        <button type="button" class="btn-secondary modal-close">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Crear/Editar Centro -->
+    <div id="modal-centro" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-centro-title">Crear Centro</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-centro">
+                    <div class="form-group">
+                        <label for="centro-codigo">Código:</label>
+                        <input type="text" id="centro-codigo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="centro-nombre">Nombre:</label>
+                        <input type="text" id="centro-nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="centro-municipio">Municipio:</label>
+                        <input type="text" id="centro-municipio" required>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn-primary">Guardar</button>
+                        <button type="button" class="btn-secondary modal-close">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estados de carga/error -->
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <p>Cargando...</p>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="../shared/config.js"></script>
+    <script type="module" src="../shared/api.js"></script>
+    <script type="module" src="../shared/auth.js"></script>
+    <script type="module" src="../shared/utils.js"></script>
+    <script type="module" src="./app.js?v=2.0"></script>
+</body>
+
+</html>

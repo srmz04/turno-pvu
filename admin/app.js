@@ -16,7 +16,7 @@ class AdminApp {
             centrosFiltrados: [],
             usuarios: [],
             centrosAdmin: [],
-            currentView: 'dashboard',
+            currentView: auth.isAuthenticated() ? 'dashboard' : 'login',
             autoRefreshInterval: null,
             countdown: 60,
             filtros: {
@@ -29,9 +29,12 @@ class AdminApp {
     }
 
     async init() {
+        // Configurar ALL listeners primero (incluyendo login)
+        this.setupEventListeners();
+
         // Verificar autenticación
         if (!auth.isAuthenticated()) {
-            window.location.href = '../registro/index.html';
+            this.mostrarLogin();
             return;
         }
 
@@ -41,29 +44,78 @@ class AdminApp {
             showToast('Acceso denegado. Solo administradores.', 'error');
             setTimeout(() => {
                 auth.logout();
-                window.location.href = '../registro/index.html';
+                this.mostrarLogin();
             }, 2000);
             return;
         }
 
-        // Mostrar info del usuario
+        // Si todo OK, mostrar UI Admin
+        this.mostrarDashboardUI(user);
+    }
+
+    mostrarLogin() {
+        this.state.currentView = 'login';
+
+        // Ocultar UI Admin
+        document.getElementById('main-header').style.display = 'none';
+        document.getElementById('main-nav').style.display = 'none';
+
+        // Mostrar Login View
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById('view-login').classList.add('active');
+    }
+
+    async mostrarDashboardUI(user) {
+        // Mostrar UI Admin
+        document.getElementById('main-header').style.display = 'block';
+        document.getElementById('main-nav').style.display = 'block';
         document.getElementById('user-info').textContent = `👤 ${user.username} (${user.rol})`;
 
-        // Configurar event listeners
-        this.setupEventListeners();
+        // Cambiar a vista dashboard
+        this.cambiarVista('dashboard');
 
-        // Cargar datos iniciales
+        // Cargar datos
         await this.cargarDashboard();
 
         // Iniciar auto-refresh
         this.iniciarAutoRefresh();
     }
 
+    async procesarLogin(e) {
+        e.preventDefault();
+        const username = document.getElementById('login-username').value;
+        const password = document.getElementById('login-password').value;
+
+        try {
+            const result = await auth.login(username, password);
+            if (result.success) {
+                if (result.user.rol === 'ADMIN') {
+                    showToast('Bienvenido Administrador', 'success');
+                    this.mostrarDashboardUI(result.user);
+                } else {
+                    showToast('Este usuario no tiene permisos de administrador', 'error');
+                    auth.logout();
+                }
+            } else {
+                showToast(result.error || 'Credenciales incorrectas', 'error');
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            showToast(error.message || 'Error de conexión', 'error');
+        }
+    }
+
     setupEventListeners() {
+        // Login Form
+        const loginForm = document.getElementById('login-form');
+        if (loginForm) {
+            loginForm.addEventListener('submit', (e) => this.procesarLogin(e));
+        }
+
         // Logout
         document.getElementById('logout-btn').addEventListener('click', () => {
             auth.logout();
-            window.location.href = '../registro/index.html';
+            this.mostrarLogin();
         });
 
         // Navegación por pestañas

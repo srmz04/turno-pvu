@@ -38,3 +38,20 @@ Thumbs.db
 *.tmp
 *.temp
 .tmp/
+
+# Deployment artifacts
+backend/.wrangler/
+*.backup
+*.bak
+
+# Database exports
+*.sql.backup
+backup-*.sql
+
+# Logs
+*.log
+logs/
+
+# Secret files
+secrets.txt
+.secrets/

@@ -1,5 +1,7 @@
 # PRD - TURNO-PVU
+
 ## Sistema de Gestion de Turnos para Puestos de Vacunacion Universal
+
 ### Durango, Mexico - Respuesta al Brote de Sarampion 2025-2026
 
 **Version:** 1.0
@@ -40,6 +42,7 @@
 Mexico enfrenta un brote activo de sarampion con 8,899 casos acumulados entre 2025 y 2026. El estado de Durango registra 62 casos confirmados y una defuncion: un nino de 8 anos originario de Mezquital, contagiado en Sinaloa, fallecido el 10 de febrero de 2026 en el Hospital Materno Infantil de Durango.
 
 La distribucion geografica en Durango se concentra en:
+
 - Durango capital: 15 casos
 - Mezquital: 5 casos (poblacion migrante agricola, alta vulnerabilidad)
 - Gomez Palacio: 1 caso
@@ -64,6 +67,7 @@ Se instruye que la vacunacion con SRP (Triple Viral) se priorice exclusivamente 
 ### 1.4 Por que un sistema digital
 
 Un sistema de fichas en papel presenta problemas conocidos:
+
 - No hay control en tiempo real del inventario
 - No se puede saber desde gobierno cuantas fichas quedan en cada centro
 - No hay trazabilidad (fichas perdidas, duplicadas, falsificadas)
@@ -79,6 +83,7 @@ TURNO-PVU resuelve esto con una herramienta digital minima, sin papel, que funci
 ### 2.1 Problema Principal
 
 No existe un mecanismo para controlar el flujo de pacientes en los puestos de vacunacion que:
+
 - Limite la entrega de fichas al numero exacto de dosis disponibles
 - Valide automaticamente que el menor esta en el rango de edad autorizado
 - Informe en tiempo real cuantos turnos quedan
@@ -109,15 +114,15 @@ Proveer un sistema digital de control de turnos que garantice que cada dosis de 
 
 ### 3.2 Objetivos Especificos
 
-| # | Objetivo | Metrica |
-|---|----------|---------|
-| 1 | Nunca emitir mas fichas que dosis disponibles | Fichas emitidas <= inventario capturado |
-| 2 | Validar 100% de las fichas por rango de edad | 0 fichas emitidas fuera de 6m-12a |
-| 3 | Captar oportunidades de VPH en 11-12 anos | % de menores elegibles a los que se les pregunto |
-| 4 | Visibilidad en tiempo real por centro | Dashboard actualizado cada 30 segundos |
-| 5 | Informar al publico sin colapsar infraestructura | Panel publico estatico con cache |
-| 6 | Trazabilidad de cada ficha emitida | 100% de fichas con usuario, hora, centro |
-| 7 | Adopcion >90% del personal en la primera semana | Centros usando el sistema / centros totales |
+| # | Objetivo                                         | Metrica                                          |
+| - | ------------------------------------------------ | ------------------------------------------------ |
+| 1 | Nunca emitir mas fichas que dosis disponibles    | Fichas emitidas <= inventario capturado          |
+| 2 | Validar 100% de las fichas por rango de edad     | 0 fichas emitidas fuera de 6m-12a                |
+| 3 | Captar oportunidades de VPH en 11-12 anos        | % de menores elegibles a los que se les pregunto |
+| 4 | Visibilidad en tiempo real por centro            | Dashboard actualizado cada 30 segundos           |
+| 5 | Informar al publico sin colapsar infraestructura | Panel publico estatico con cache                 |
+| 6 | Trazabilidad de cada ficha emitida               | 100% de fichas con usuario, hora, centro         |
+| 7 | Adopcion >90% del personal en la primera semana  | Centros usando el sistema / centros totales      |
 
 ---
 
@@ -128,6 +133,7 @@ Proveer un sistema digital de control de turnos que garantice que cada dosis de 
 **Quien es:** Personal de salud asignado a la entrada del modulo de vacunacion. NO es el enfermero vacunador. Es una persona dedicada exclusivamente a registrar y emitir fichas.
 
 **Que hace:**
+
 - Pregunta la edad del menor
 - Pregunta el sexo
 - Si aplica, pregunta si tiene VPH
@@ -144,6 +150,7 @@ Proveer un sistema digital de control de turnos que garantice que cada dosis de 
 **Quien es:** Enfermero/a que aplica la vacuna. NO deja de vacunar para usar el sistema.
 
 **Que hace:**
+
 - Recibe al menor con la ficha (foto en celular del acompanante)
 - Lee el folio de 4 digitos en la pantalla del acompanante
 - Busca el folio en el sistema y marca "APLICADA"
@@ -158,6 +165,7 @@ Proveer un sistema digital de control de turnos que garantice que cada dosis de 
 **Quien es:** Responsable del centro de salud o jefe de enfermeria.
 
 **Que hace:**
+
 - Al inicio del turno, captura cuantas dosis tiene disponibles (SRP y VPH por separado)
 - Monitorea el avance del dia en su centro
 - Recibe alertas cuando quedan pocas dosis
@@ -170,6 +178,7 @@ Proveer un sistema digital de control de turnos que garantice que cada dosis de 
 **Quien es:** El responsable de coordinar los 15 centros. Probablemente tu.
 
 **Que hace:**
+
 - Ve el dashboard general con todos los centros
 - Identifica centros con desabasto para reasignar biologico
 - Genera reportes consolidados para la Secretaria de Salud
@@ -182,6 +191,7 @@ Proveer un sistema digital de control de turnos que garantice que cada dosis de 
 **Quien es:** Ciudadanos que quieren saber si hay vacunas disponibles antes de ir al centro.
 
 **Que hace:**
+
 - Consulta una pagina web simple con la disponibilidad por centro
 - Ve cuantos turnos quedan y tiempo estimado de espera
 - Ve cuando se agotaron los turnos y cuando habra mas
@@ -190,13 +200,13 @@ Proveer un sistema digital de control de turnos que garantice que cada dosis de 
 
 ### Resumen de usuarios internos
 
-| Rol | Cantidad | Acceso |
-|-----|----------|--------|
-| Registrador | 15-30 | Modulo de registro unicamente |
-| Aplicador | 15-45 | Modulo de aplicacion (marcar fichas) |
-| Coordinador Centro | 15 | Dashboard de su centro + inventario |
-| Coordinador General | 1-3 | Dashboard general + admin |
-| **Total** | **~50-90 max** | |
+| Rol                 | Cantidad             | Acceso                               |
+| ------------------- | -------------------- | ------------------------------------ |
+| Registrador         | 15-30                | Modulo de registro unicamente        |
+| Aplicador           | 15-45                | Modulo de aplicacion (marcar fichas) |
+| Coordinador Centro  | 15                   | Dashboard de su centro + inventario  |
+| Coordinador General | 1-3                  | Dashboard general + admin            |
+| **Total**     | **~50-90 max** |                                      |
 
 ---
 
@@ -221,7 +231,7 @@ Proveer un sistema digital de control de turnos que garantice que cada dosis de 
 
 ### 5.2 Fuera del alcance (NO se construye)
 
-- Registro de datos personales (nombre, CURP, domicilio)
+- Registro de datos personales (nombre, , domicilio)
 - Padron nominal de vacunacion
 - Integracion con SISMOS, SINBA u otros sistemas federales
 - Notificaciones SMS/WhatsApp/Email
@@ -357,17 +367,18 @@ APLICADOR:
 
 ### 7.1 Validacion de Edad y Asignacion de Biologico (SRP, SR, VPH)
 
-| Edad | Resultado | Biologico |
-|------|-----------|-----------|
-| < 6 meses | RECHAZADO | Ninguno |
-| 6 meses a 10 anos (cualquier sexo) | ACEPTADO | SRP |
-| Mujer 11 anos | ACEPTADO | SR + pregunta VPH |
-| Hombre 11 anos | ACEPTADO | SR + pregunta VPH |
-| Mujer 12 anos | ACEPTADO | SR + pregunta VPH |
-| Hombre 12 anos | ACEPTADO | SR |
-| > 12 anos | RECHAZADO | Ninguno |
+| Edad                               | Resultado | Biologico         |
+| ---------------------------------- | --------- | ----------------- |
+| < 6 meses                          | RECHAZADO | Ninguno           |
+| 6 meses a 10 anos (cualquier sexo) | ACEPTADO  | SRP               |
+| Mujer 11 anos                      | ACEPTADO  | SR + pregunta VPH |
+| Hombre 11 anos                     | ACEPTADO  | SR + pregunta VPH |
+| Mujer 12 anos                      | ACEPTADO  | SR + pregunta VPH |
+| Hombre 12 anos                     | ACEPTADO  | SR                |
+| > 12 anos                          | RECHAZADO | Ninguno           |
 
 **Nota sobre SRP vs SR:**
+
 - SRP (Triple Viral: Sarampion, Rubeola, Parotiditis) se aplica a menores de 6 meses a 10 anos.
 - SR (Doble Viral: Sarampion, Rubeola) se aplica a mayores de 10 anos (11 y 12).
 - El sistema determina automaticamente cual biologico corresponde segun la edad.
@@ -375,10 +386,12 @@ APLICADOR:
 ### 7.2 Logica de VPH
 
 La pregunta de VPH SOLO aparece cuando la edad y sexo lo ameritan:
+
 - Mujeres de 11 y 12 anos
 - Hombres de 11 anos
 
 El flujo es:
+
 1. Sistema detecta elegibilidad VPH
 2. Muestra pregunta: "El menor tiene esquema de VPH?"
 3. Si responde NO → Se asignan SRP + VPH
@@ -429,11 +442,11 @@ Toda transicion queda en auditoria con usuario, motivo y timestamp.
 
 ### 7.6 Alertas de Inventario
 
-| Nivel | Condicion | Accion |
-|-------|-----------|--------|
-| VERDE | > 20% del inventario inicial | Operacion normal |
-| AMARILLO | <= 20% y > 0 | Alerta visual en dashboard |
-| ROJO | = 0 | Bloqueo de emision + aviso en panel publico |
+| Nivel    | Condicion                    | Accion                                      |
+| -------- | ---------------------------- | ------------------------------------------- |
+| VERDE    | > 20% del inventario inicial | Operacion normal                            |
+| AMARILLO | <= 20% y > 0                 | Alerta visual en dashboard                  |
+| ROJO     | = 0                          | Bloqueo de emision + aviso en panel publico |
 
 ---
 
@@ -468,6 +481,7 @@ Esta seccion documenta TODOS los escenarios que pueden salir del flujo normal. C
 ```
 
 **Reglas:**
+
 - Solo el COORDINADOR puede buscar fichas y reemitir
 - La ficha original queda con estado REEMITIDA y apunta al folio nuevo
 - La ficha nueva tiene referencia a la ficha original
@@ -475,6 +489,7 @@ Esta seccion documenta TODOS los escenarios que pueden salir del flujo normal. C
 - El inventario NO se afecta (no se resta otra dosis, es la misma)
 
 **Proteccion anti-fraude:**
+
 - Si la ficha original aparece despues y alguien intenta usarla, el sistema muestra: "FICHA REEMITIDA - NO VALIDA. Folio reemplazo: PVU-001-0089"
 - No se puede vacunar dos veces con la misma dosis logica
 
@@ -483,6 +498,7 @@ Esta seccion documenta TODOS los escenarios que pueden salir del flujo normal. C
 ### 8.2 CANCELACION DE FICHA
 
 **Situacion:** Se emitio una ficha pero la persona decide no vacunarse. Razones posibles:
+
 - El nino esta llorando y la mama decide irse
 - La mama se entero que el nino ya tenia la vacuna
 - El nino tiene fiebre y el medico dice que no se le puede aplicar hoy
@@ -508,6 +524,7 @@ Esta seccion documenta TODOS los escenarios que pueden salir del flujo normal. C
 ```
 
 **Reglas:**
+
 - Solo COORDINADOR o ADMIN pueden cancelar fichas
 - El REGISTRADOR no puede cancelar (evita cancelaciones sin supervision)
 - Motivo obligatorio, queda en auditoria
@@ -516,6 +533,7 @@ Esta seccion documenta TODOS los escenarios que pueden salir del flujo normal. C
 - Una ficha APLICADA nunca se puede cancelar
 
 **Proteccion anti-fraude:**
+
 - Si un coordinador cancela un numero anormal de fichas (>10% del turno), el dashboard general marca una ALERTA
 - El patron "emitir y cancelar repetidamente" se detecta en auditoria
 
@@ -526,6 +544,7 @@ Esta seccion documenta TODOS los escenarios que pueden salir del flujo normal. C
 **Situacion:** Una persona intenta obtener dos fichas. Escenarios:
 
 **Escenario A: Misma persona, mismo centro, mismo turno**
+
 ```
 1. Mama ya tiene ficha PVU-001-0034 para su hijo de 7 anos
 2. Mama vuelve a formarse y dice: "Mi hijo tiene 7 anos"
@@ -534,6 +553,7 @@ Esta seccion documenta TODOS los escenarios que pueden salir del flujo normal. C
 ```
 
 **Como lo maneja el sistema:**
+
 - El sistema NO puede detectar esto automaticamente porque no registra datos personales (nombre, CURP). Esta es una decision de diseno consciente: no se registran datos personales.
 - La proteccion es OPERATIVA, no tecnologica:
   - El registrador debe estar en la entrada unica del modulo. Si alguien ya paso, no deberia poder volver a formarse sin que lo note.
@@ -541,12 +561,14 @@ Esta seccion documenta TODOS los escenarios que pueden salir del flujo normal. C
   - En el peor caso: se desperdicia 1 dosis. Es un riesgo aceptable vs. la friccion de pedir CURP a cada persona.
 
 **Escenario B: Misma persona, diferente centro**
+
 ```
 1. Mama obtiene ficha en CS Durango Centro
 2. Mama va a CS Mezquital y pide otra ficha
 ```
 
 **Como lo maneja el sistema:**
+
 - No se puede detectar automaticamente (no hay datos personales cruzados)
 - Es un riesgo bajo: la mama tendria que trasladarse a otro centro, hacer fila de nuevo, y el nino recibiria doble dosis (que medicamente no es peligroso con SRP, solo es desperdicio)
 - Mitigacion operativa: si en el futuro se detecta un patron, se puede agregar validacion por CURP como feature opcional
@@ -636,6 +658,7 @@ Mitigacion:
 ```
 
 **Reglas:**
+
 - Una ficha APLICADA es terminal. No hay vuelta atras.
 - El sistema NUNCA permite marcar una ficha aplicada dos veces
 - Cada intento de reutilizacion se registra con usuario, folio, hora
@@ -666,6 +689,7 @@ Mitigacion:
 ```
 
 **Reglas:**
+
 - El sistema PERMITE aplicar fichas de otros centros (la prioridad es vacunar al nino)
 - Pero queda registrado como APLICACION_CRUZADA en auditoria
 - Los inventarios se ajustan automaticamente entre centros
@@ -687,6 +711,7 @@ Mitigacion:
 ```
 
 **Regla del sistema:**
+
 - El vacunador NO puede generar fichas (su rol es APLICADOR)
 - Para marcar una vacuna como APLICADA, DEBE existir un folio
 - No hay forma de registrar una aplicacion sin ficha previa
@@ -725,6 +750,7 @@ Mitigacion:
 ```
 
 **Reglas:**
+
 - Fichas canceladas por error NO cuentan como desperdicio
 - Fichas de correccion son un tipo especial que solo el COORDINADOR puede emitir
 - El error se documenta con ficha original y ficha correctiva
@@ -749,6 +775,7 @@ Mitigacion:
 ```
 
 **Reglas:**
+
 - No hay limite de fichas por acompanante
 - Cada ficha es independiente
 - El acompanante debe tener UNA FOTO POR HIJO (no una foto con los 3)
@@ -776,6 +803,7 @@ Mitigacion:
 ```
 
 **Reglas:**
+
 - El cierre de turno con fichas pendientes SIEMPRE muestra advertencia
 - Las fichas NO_UTILIZADA no se pueden recuperar despues del cierre
 - Las dosis fisicas correspondientes siguen existiendo y se recargan en el proximo turno
@@ -800,6 +828,7 @@ Mitigacion:
 ```
 
 **Reglas:**
+
 - Maximo 1 turno abierto por centro a la vez
 - Para abrir vespertino, primero hay que cerrar matutino
 - Solo COORDINADOR y ADMIN pueden abrir/cerrar turnos
@@ -827,6 +856,7 @@ Mitigacion:
 ```
 
 **Reglas:**
+
 - Si VPH = 0, la pregunta de VPH no aparece (no genera expectativas falsas)
 - La ficha registra que NO se pregunto y la razon implicita es el desabasto
 - El reporte muestra "oportunidades VPH perdidas por desabasto" como metrica
@@ -861,6 +891,7 @@ Mitigacion:
 ```
 
 **Reglas:**
+
 - La formula de integridad siempre se verifica al cierre:
   `declaradas = aplicadas + canceladas_devueltas + no_utilizadas + sobrantes_fisicos`
 - Si no cuadra, se registra DISCREPANCIA en auditoria
@@ -887,12 +918,14 @@ Mitigacion:
 ```
 
 **Causas posibles:**
+
 - El vacunador tecleo mal (la mas comun, se corrige reintentando)
 - La foto esta borrosa y el numero se lee mal
 - La ficha es de ayer (folios del turno anterior ya no aparecen en busqueda rapida)
 - La ficha es falsa (alguien fabrico un folio que no existe)
 
 **Reglas:**
+
 - El sistema registra busquedas fallidas en auditoria
 - Si hay multiples busquedas fallidas seguidas, puede indicar un problema sistematico
 
@@ -915,6 +948,7 @@ Mitigacion:
 ```
 
 **Proteccion de diseno:**
+
 - La foto/QR es solo un REFERENCIA para el folio. No es la fuente de verdad.
 - La fuente de verdad SIEMPRE es la base de datos
 - El QR solo contiene el folio (no biologico, no edad, no centro)
@@ -938,6 +972,7 @@ Mitigacion:
 ```
 
 **Reglas:**
+
 - El sistema detecta inactividad por ausencia de emision de fichas
 - No se bloquea la sesion por inactividad (el registrador puede retomar sin relogin)
 - La inactividad queda implicita en el log temporal de fichas
@@ -962,6 +997,7 @@ Mitigacion:
 ```
 
 **Reglas:**
+
 - Fichas de turnos cerrados NO se pueden aplicar
 - El acompanante debe pasar nuevamente por el filtro
 - Se genera nueva ficha, se resta del inventario del turno vespertino
@@ -990,6 +1026,7 @@ Mitigacion:
 ```
 
 **Proteccion tecnica:**
+
 - El endpoint de emision de fichas es IDEMPOTENTE
 - Si se reciben dos peticiones identicas en menos de 60 segundos del mismo usuario, se devuelve la misma ficha
 - Esto evita doble emision por timeout/reintento
@@ -1015,6 +1052,7 @@ Mitigacion:
 ```
 
 **Reglas:**
+
 - No se puede emitir fichas sin turno abierto
 - No se puede abrir turno sin declarar inventario > 0
 - El registrador ve claramente POR QUE no puede operar
@@ -1132,6 +1170,7 @@ CIUDADANO LLEGA AL CENTRO
 **Proposito:** Emitir fichas digitales validando edad y biologico.
 
 **Pantalla principal:**
+
 - Campo: Edad en anos (numerico, 0-15)
 - Campo: Edad en meses (numerico, 0-11)
 - Selector: Sexo (Masculino / Femenino)
@@ -1140,6 +1179,7 @@ CIUDADANO LLEGA AL CENTRO
 - Boton: GENERAR FICHA (grande, centrado, imposible de confundir)
 
 **Pantalla de ficha (para foto):**
+
 - Folio en texto grande (legible a 1 metro)
 - QR centrado y grande (conteniendo el folio)
 - Biologico asignado: "SRP" o "SRP + VPH"
@@ -1150,16 +1190,19 @@ CIUDADANO LLEGA AL CENTRO
 - Boton: SIGUIENTE (limpia pantalla para el proximo)
 
 **Pantalla de rechazo:**
+
 - Mensaje en rojo: "EDAD NO AUTORIZADA"
 - Texto explicativo breve
 - Boton: SIGUIENTE
 
 **Pantalla de pregunta VPH (condicional):**
+
 - "El menor tiene esquema de VPH aplicado?"
 - Boton: SI (asigna solo SRP)
 - Boton: NO (asigna SRP + VPH)
 
 **Restricciones de diseno:**
+
 - Maximo 3 campos de entrada
 - Botones minimo 48px de alto (touch friendly)
 - Texto minimo 16px
@@ -1174,6 +1217,7 @@ CIUDADANO LLEGA AL CENTRO
 La fila se respeta en un ~95% de los casos. En lugar de obligar al vacunador a escribir o escanear cada folio, el sistema PREDICE quien sigue y solo pide confirmacion.
 
 **Pantalla principal:**
+
 - Muestra en grande: "SIGUIENTE: FOLIO 0045" (basado en el consecutivo anterior)
 - Datos del paciente (si estan en cache): "Nino 7 anios - SRP"
 - Boton de vacuna dinamico segun edad:
@@ -1189,10 +1233,12 @@ La fila se respeta en un ~95% de los casos. En lugar de obligar al vacunador a e
 - **Escenario C (Desorden total):** Vacunador presiona boton pequeno [Teclado Manual]. Se abre teclado numerico grande. Digita el folio manualmente. Solo necesario en casos excepcionales.
 
 **Seguridad Anti-Error:**
+
 - Si el folio no ha sido emitido o ya fue aplicado, el sistema vibra y muestra error rojo
 - La validacion ocurre contra la base de datos local (sincronizada previamente o por logica de rangos)
 
 **Por que NO se escanea QR:**
+
 - El vacunador tiene guantes puestos
 - Manipular camara/celular entre pacientes es antihigienico
 - El flujo secuencial (1 click) es mas rapido que enfocar un QR
@@ -1203,6 +1249,7 @@ La fila se respeta en un ~95% de los casos. En lugar de obligar al vacunador a e
 **Proposito:** Configurar dosis disponibles, administrar dispositivos y personal, y servir como respaldo de datos ante fallas de conectividad.
 
 **Pantalla de inicio de turno:**
+
 - Selector: Turno (Matutino / Vespertino)
 - Campo: Dosis SRP disponibles (numerico)
 - Campo: Dosis SR disponibles (numerico)
@@ -1210,6 +1257,7 @@ La fila se respeta en un ~95% de los casos. En lugar de obligar al vacunador a e
 - Boton: INICIAR TURNO (una vez presionado, los numeros quedan fijos)
 
 **Pantalla de monitoreo de centro:**
+
 - Barra de progreso SRP: emitidas / total
 - Barra de progreso SR: emitidas / total
 - Barra de progreso VPH: emitidas / total
@@ -1217,6 +1265,7 @@ La fila se respeta en un ~95% de los casos. En lugar de obligar al vacunador a e
 - Lista de fichas del turno actual
 
 **Seccion: Gestion de Usuarios y Dispositivos:**
+
 - Boton: **[CREAR REGISTRADOR]** → Genera URL unica persistente (ej. `pvu.mx/r/centro01-reg01-tokenXYZ`)
 - Boton: **[CREAR VACUNADOR]** → Genera URL unica persistente (ej. `pvu.mx/v/centro01-vac01-tokenABC`)
 - Tabla de usuarios activos con su URL, rol, y estado de conexion
@@ -1225,12 +1274,14 @@ La fila se respeta en un ~95% de los casos. En lugar de obligar al vacunador a e
 - El Coordinador configura fisicamente los equipos (MeeBox o celulares) usando estos links al inicio del operativo
 
 **Seccion: Distribucion de Bloques de Folios:**
+
 - Tabla de dispositivos activos con bloques asignados
 - Boton: **[ASIGNAR BLOQUE]** → Permite repartir rangos de folios a cada dispositivo (ej. "Reg-01: 001-050", "Reg-02: 051-100")
 - Solo necesario cuando hay mas de 1 registrador en el centro
 
 **Seccion: Cortes Informativos Manuales (Respaldo):**
 Se utiliza UNICAMENTE cuando falla la conectividad automatica de los dispositivos (MeeBox sin internet).
+
 - Si hay internet: los dispositivos sincronizan solos y el Coordinador solo monitorea
 - Si NO hay internet en los dispositivos:
   - El Coordinador camina a las MeeBox y lee el contador en pantalla
@@ -1243,6 +1294,7 @@ Se utiliza UNICAMENTE cuando falla la conectividad automatica de los dispositivo
 **Proposito:** Vision general de los 15 centros en tiempo real.
 
 **Pantalla principal:**
+
 - Tabla de centros con columnas:
   - Centro | SRP emitidas/total | SR emitidas/total | VPH emitidas/total | Aplicadas | Estado
 - Semaforo por centro (verde/amarillo/rojo)
@@ -1250,11 +1302,13 @@ Se utiliza UNICAMENTE cuando falla la conectividad automatica de los dispositivo
 - Filtros: por municipio, por estado de alerta
 
 **Pantalla de reportes:**
+
 - Seleccionar rango de fechas
 - Exportar a CSV
 - Datos: fichas por centro, por dia, por biologico (SRP, SR, VPH), fichas no utilizadas, rechazos por edad, captacion VPH
 
 **Pantalla de administracion:**
+
 - Alta/baja de centros de salud
 - Alta/baja de usuarios
 - Asignacion de roles
@@ -1267,11 +1321,13 @@ Se utiliza UNICAMENTE cuando falla la conectividad automatica de los dispositivo
 **Tecnologia:** IndexedDB (base de datos en el navegador) + Service Worker (PWA) + Background Sync.
 
 **Funcionamiento:**
+
 - **Con internet:** Cada accion (emitir ficha, marcar aplicada) se envia al servidor en tiempo real y se guarda localmente como respaldo.
 - **Sin internet:** Las acciones se guardan en IndexedDB (cola de salida). El sistema sigue funcionando normalmente con los datos locales y los bloques de folios pre-asignados.
 - **Al recuperar internet:** El Service Worker sube automaticamente las acciones pendientes en segundo plano (Background Sync), incluso si el usuario cerro la pestana.
 
 **Indicador visual:**
+
 - Barra superior verde: "CONECTADO" (operacion normal)
 - Barra superior naranja: "MODO CONTINGENCIA - Sin conexion" (operando localmente)
 
@@ -1429,14 +1485,14 @@ Porque no es el proposito del sistema. Agregar nombre/CURP/domicilio triplicaria
 
 ### 11.2 Stack Tecnico
 
-| Componente | Tecnologia | Justificacion |
-|-----------|------------|---------------|
-| Frontend | HTML + CSS + JavaScript vanilla | No necesita React para 3 pantallas simples. Menos complejidad, menos build, corre en cualquier navegador |
-| Backend | Python (FastAPI) o Node.js (Express) | Un archivo, un proceso, API REST simple |
-| Base de datos | SQLite | Archivo unico, sin servidor de BD, portable, respaldo = copiar archivo |
-| QR | Libreria qrcode (JS en front o Python en back) | El QR solo contiene el folio, no datos |
-| Hosting | Servidor local o VPS gratuito (Oracle Cloud Free, Railway) | Para 50 usuarios no se necesita nada potente |
-| Panel publico | Archivo JSON estatico servido desde CDN gratuito | Cero carga al servidor principal |
+| Componente    | Tecnologia                                                 | Justificacion                                                                                            |
+| ------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Frontend      | HTML + CSS + JavaScript vanilla                            | No necesita React para 3 pantallas simples. Menos complejidad, menos build, corre en cualquier navegador |
+| Backend       | Python (FastAPI) o Node.js (Express)                       | Un archivo, un proceso, API REST simple                                                                  |
+| Base de datos | SQLite                                                     | Archivo unico, sin servidor de BD, portable, respaldo = copiar archivo                                   |
+| QR            | Libreria qrcode (JS en front o Python en back)             | El QR solo contiene el folio, no datos                                                                   |
+| Hosting       | Servidor local o VPS gratuito (Oracle Cloud Free, Railway) | Para 50 usuarios no se necesita nada potente                                                             |
+| Panel publico | Archivo JSON estatico servido desde CDN gratuito           | Cero carga al servidor principal                                                                         |
 
 ### 11.3 Diagrama de Componentes
 
@@ -1487,6 +1543,7 @@ GET    /api/publico/disponibilidad  - JSON para panel publico (con cache)
 Solo el folio: `PVU-001-0047`
 
 **Por que no un JSON completo?**
+
 - Un QR con mucho texto se vuelve denso y dificil de leer en una foto
 - El folio es suficiente para buscar todo en la base de datos
 - Si el QR solo tiene el folio, es legible incluso en fotos borrosas
@@ -1499,6 +1556,7 @@ Solo el folio: `PVU-001-0047`
 ### 12.1 Hardware Disponible
 
 **MeeBox 2018:**
+
 - Mini PC con camara integrada
 - Procesador suficiente para navegador web
 - Pantalla conectada (o se conecta a monitor/TV del centro)
@@ -1506,6 +1564,7 @@ Solo el folio: `PVU-001-0047`
 - Se usa como terminal de registro y aplicacion
 
 **Requisitos por centro:**
+
 - 1 MeeBox para registro (punto de filtro)
 - 1 MeeBox o cualquier computadora/celular para el aplicador
 - Conexion a internet (WiFi o datos moviles)
@@ -1513,16 +1572,19 @@ Solo el folio: `PVU-001-0047`
 ### 12.2 Servidor
 
 **Opcion A - VPS gratuito:**
+
 - Oracle Cloud Free Tier: 1 vCPU, 1 GB RAM (suficiente para 50 usuarios)
 - Railway free tier
 - Render free tier
 
 **Opcion B - Servidor local (SSA):**
+
 - Cualquier computadora en la jurisdiccion con IP fija o accesible en red
 - Ventaja: datos dentro de la red de salud
 - Desventaja: si se cae, se cae todo
 
 **Opcion C - Hibrido:**
+
 - Servidor local como principal
 - Respaldo automatico a la nube cada hora
 
@@ -1592,20 +1654,21 @@ El publico necesita saber si vale la pena ir a un centro. Pero NO vamos a expone
 
 ### 14.2 Autorizacion por Rol
 
-| Accion | REGISTRADOR | APLICADOR | COORDINADOR | ADMIN |
-|--------|:-----------:|:---------:|:-----------:|:-----:|
-| Emitir ficha | SI | NO | SI | SI |
-| Marcar aplicada | NO | SI | SI | SI |
-| Abrir/cerrar turno | NO | NO | SI | SI |
-| Ver dashboard centro | NO | NO | SI | SI |
-| Ver dashboard general | NO | NO | NO | SI |
-| Crear usuarios | NO | NO | NO | SI |
-| Exportar reportes | NO | NO | SI | SI |
-| Ajustar inventario | NO | NO | NO | SI |
+| Accion                | REGISTRADOR | APLICADOR | COORDINADOR | ADMIN |
+| --------------------- | :---------: | :-------: | :---------: | :---: |
+| Emitir ficha          |     SI     |    NO    |     SI     |  SI  |
+| Marcar aplicada       |     NO     |    SI    |     SI     |  SI  |
+| Abrir/cerrar turno    |     NO     |    NO    |     SI     |  SI  |
+| Ver dashboard centro  |     NO     |    NO    |     SI     |  SI  |
+| Ver dashboard general |     NO     |    NO    |     NO     |  SI  |
+| Crear usuarios        |     NO     |    NO    |     NO     |  SI  |
+| Exportar reportes     |     NO     |    NO    |     SI     |  SI  |
+| Ajustar inventario    |     NO     |    NO    |     NO     |  SI  |
 
 ### 14.3 Auditoria
 
 Cada accion queda registrada con:
+
 - Usuario que la realizo
 - Accion exacta
 - Entidad afectada (ficha, turno, etc.)
@@ -1613,6 +1676,7 @@ Cada accion queda registrada con:
 - IP de origen
 
 Esto permite:
+
 - Saber si un registrador emitio fichas fuera de horario
 - Detectar si un turno se abrio con numeros inflados
 - Verificar que las fichas emitidas coinciden con las aplicadas
@@ -1629,6 +1693,7 @@ El numero de fichas emitidas NUNCA puede superar el inventario capturado. Esta v
 ### 15.1 Realidad del Personal
 
 Hay que ser honestos: el personal operativo de los centros de salud tiene:
+
 - Carga de trabajo alta y creciente por la emergencia
 - Poca familiaridad con sistemas digitales (mas alla de WhatsApp)
 - Resistencia natural a "una cosa mas que hacer"
@@ -1638,6 +1703,7 @@ Hay que ser honestos: el personal operativo de los centros de salud tiene:
 ### 15.2 Estrategia de Adopcion
 
 **A) Diseno a prueba de errores:**
+
 - 3 campos de entrada. Nada mas.
 - Botones enormes con texto claro
 - No hay menus, no hay navegacion
@@ -1645,6 +1711,7 @@ Hay que ser honestos: el personal operativo de los centros de salud tiene:
 - El operativo NO necesita entender el sistema, solo seguir 3 pasos
 
 **B) Los 3 pasos del registrador:**
+
 1. Poner edad y sexo
 2. Dar click en GENERAR
 3. Que le tomen foto → click en SIGUIENTE
@@ -1652,6 +1719,7 @@ Hay que ser honestos: el personal operativo de los centros de salud tiene:
 Tiempo total: 15 segundos por paciente.
 
 **C) Los 2 pasos del aplicador:**
+
 1. Escribir 4 digitos del folio
 2. Click en APLICADA
 
@@ -1661,6 +1729,7 @@ Tiempo total: 5 segundos por paciente.
 "El sistema te protege. Si se terminan las vacunas, el sistema le dice a la gente, no tu. Si preguntan por que no les toco, el folio demuestra que se respeto el orden de llegada. Sin el sistema, tu tienes que dar la cara."
 
 **E) Capacitacion:**
+
 - No se necesita manual de 50 paginas
 - Un video de 90 segundos por rol
 - Practica en vivo de 5 minutos antes del primer turno
@@ -1708,6 +1777,7 @@ La ficha se marca como NO_UTILIZADA y se emite una nueva. Solo el coordinador pu
 **Entregable:** Sistema operativo minimo para empezar a usar en 1-2 centros piloto.
 
 Incluye:
+
 - Backend con API REST basica
 - Base de datos SQLite con esquema completo
 - Modulo de registro con validacion de edad y emision de ficha
@@ -1718,6 +1788,7 @@ Incluye:
 - Seed de datos: centros de salud y usuarios de prueba
 
 NO incluye:
+
 - Dashboard consolidado
 - Panel publico
 - Reportes
@@ -1728,6 +1799,7 @@ NO incluye:
 **Entregable:** Sistema completo para los 15 centros.
 
 Incluye:
+
 - Dashboard de coordinador de centro
 - Dashboard general (coordinador jurisdiccion)
 - Panel publico con JSON estatico
@@ -1742,6 +1814,7 @@ Incluye:
 **Entregable:** Mejoras basadas en uso real.
 
 Incluye:
+
 - Ajustes de UX basados en feedback del personal
 - Graficas en dashboard
 - Alertas visuales/sonoras de desabasto
@@ -1753,38 +1826,38 @@ Incluye:
 
 ## 17. METRICAS DE EXITO
 
-| Metrica | Objetivo | Como se mide |
-|---------|----------|-------------- |
-| Fichas emitidas sin exceder inventario | 100% | fichas_emitidas <= inventario_inicial (siempre) |
-| Fichas fuera de rango de edad | 0 | fichas con edad < 6m o > 12a = 0 |
-| Centros usando el sistema | 15/15 | Centros con actividad en el dia |
-| Tiempo de registro por paciente | < 20 seg | Diferencia entre fichas consecutivas |
-| Captacion VPH en elegibles | > 80% | Fichas con vph_preguntado / fichas elegibles |
-| Diferencia fichas vs aplicadas | < 5% | (emitidas - aplicadas) / emitidas |
-| Disponibilidad del sistema | > 99% uptime | Monitoreo basico |
+| Metrica                                | Objetivo     | Como se mide                                    |
+| -------------------------------------- | ------------ | ----------------------------------------------- |
+| Fichas emitidas sin exceder inventario | 100%         | fichas_emitidas <= inventario_inicial (siempre) |
+| Fichas fuera de rango de edad          | 0            | fichas con edad < 6m o > 12a = 0                |
+| Centros usando el sistema              | 15/15        | Centros con actividad en el dia                 |
+| Tiempo de registro por paciente        | < 20 seg     | Diferencia entre fichas consecutivas            |
+| Captacion VPH en elegibles             | > 80%        | Fichas con vph_preguntado / fichas elegibles    |
+| Diferencia fichas vs aplicadas         | < 5%         | (emitidas - aplicadas) / emitidas               |
+| Disponibilidad del sistema             | > 99% uptime | Monitoreo basico                                |
 
 ---
 
 ## 18. GLOSARIO
 
-| Termino | Significado |
-|---------|-------------|
-| SRP | Vacuna Triple Viral (Sarampion, Rubeola, Parotiditis) - se aplica a menores de 6 meses a 10 anios |
-| SR | Vacuna Doble Viral (Sarampion, Rubeola) - se aplica a menores de 11 y 12 anios |
-| VPH | Vacuna contra Virus del Papiloma Humano |
-| Biologico | Termino tecnico para referirse a la vacuna como producto |
-| Ficha | Turno digital asignado a un menor para vacunacion |
-| Folio | Identificador unico de la ficha |
-| Turno | Sesion de vacunacion en un centro (matutino/vespertino) |
+| Termino           | Significado                                                                                                           |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------- |
+| SRP               | Vacuna Triple Viral (Sarampion, Rubeola, Parotiditis) - se aplica a menores de 6 meses a 10 anios                     |
+| SR                | Vacuna Doble Viral (Sarampion, Rubeola) - se aplica a menores de 11 y 12 anios                                        |
+| VPH               | Vacuna contra Virus del Papiloma Humano                                                                               |
+| Biologico         | Termino tecnico para referirse a la vacuna como producto                                                              |
+| Ficha             | Turno digital asignado a un menor para vacunacion                                                                     |
+| Folio             | Identificador unico de la ficha                                                                                       |
+| Turno             | Sesion de vacunacion en un centro (matutino/vespertino)                                                               |
 | Corte Informativo | Reporte manual de dosis restantes que el Coordinador sube desde su celular cuando los dispositivos no tienen internet |
-| Bloque de Folios | Rango de folios pre-asignado a un dispositivo para operar offline sin conflictos |
-| Registrador | Personal que emite fichas en el punto de filtro |
-| Aplicador | Enfermero que aplica la vacuna y marca la ficha |
-| MeeBox | Mini PC disponible en los centros de salud (modelo 2018) |
-| PVU | Puesto de Vacunacion Universal |
-| CDN | Content Delivery Network - red de distribucion de contenido |
-| IndexedDB | Base de datos en el navegador para persistencia offline |
-| PWA | Progressive Web App - aplicacion web instalable que funciona offline |
+| Bloque de Folios  | Rango de folios pre-asignado a un dispositivo para operar offline sin conflictos                                      |
+| Registrador       | Personal que emite fichas en el punto de filtro                                                                       |
+| Aplicador         | Enfermero que aplica la vacuna y marca la ficha                                                                       |
+| MeeBox            | Mini PC disponible en los centros de salud (modelo 2018)                                                              |
+| PVU               | Puesto de Vacunacion Universal                                                                                        |
+| CDN               | Content Delivery Network - red de distribucion de contenido                                                           |
+| IndexedDB         | Base de datos en el navegador para persistencia offline                                                               |
+| PWA               | Progressive Web App - aplicacion web instalable que funciona offline                                                  |
 
 ---
 

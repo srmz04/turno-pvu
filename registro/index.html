@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PVU Registro</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="../shared/styles-base.css">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QR Code Lib -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+
+<body>
+    <div id="offline-banner" class="offline-banner hidden">
+        <i class="fas fa-wifi-slash"></i> MODO SIN CONEXIÓN - Guardando localmente
+    </div>
+
+    <div id="app">
+        <!-- Views will be injected here by app.js -->
+        <div class="text-center p-20">
+            <i class="fas fa-circle-notch fa-spin fa-3x"></i>
+            <p>Cargando aplicación...</p>
+        </div>
+    </div>
+
+    <script type="module" src="app.js?v=2.0"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('SW Registered'))
+                    .catch(err => console.log('SW Error', err));
+            });
+        }
+    </script>
+</body>
+
+</html>

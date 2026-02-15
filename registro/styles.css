@@ -1,0 +1,166 @@
+/* srmz04/turno-pvu - Registro Styles */
+
+/* Layout específico para iPad/Tablet en horizontal o vertical */
+#app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    justify-content: center;
+    /* Centrado vertical por defecto (login) */
+}
+
+/* Auth View */
+.login-container {
+    max-width: 400px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 20px;
+}
+
+/* Main Form View */
+.form-container {
+    max-width: 600px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Large Inputs for Outdoors/Touch */
+.giant-input {
+    font-size: 1.5rem !important;
+    padding: 16px !important;
+    height: 60px;
+    margin-bottom: 24px;
+}
+
+.giant-btn {
+    font-size: 1.5rem !important;
+    padding: 20px !important;
+    height: auto;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* Sex Selection - Big Buttons */
+.sex-selection {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.sex-btn {
+    flex: 1;
+    font-size: 2rem;
+    padding: 30px;
+    border: 2px solid #ddd;
+    background: white;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #555;
+}
+
+.sex-btn.selected {
+    border-color: var(--primary-color);
+    background-color: var(--primary-light);
+    color: var(--primary-dark);
+    font-weight: bold;
+    transform: scale(1.02);
+}
+
+.sex-btn i {
+    margin-bottom: 10px;
+}
+
+/* High Contrast Mode for Outdoors */
+body.high-contrast {
+    background-color: #000;
+    color: #fff;
+}
+
+body.high-contrast .card {
+    background-color: #222;
+    color: #fff;
+    border: 1px solid #fff;
+}
+
+body.high-contrast input {
+    background-color: #333;
+    color: #fff;
+    border-color: #fff;
+}
+
+/* Success View */
+.success-view {
+    text-align: center;
+    padding: 40px 20px;
+    background: var(--success-color);
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.folio-display {
+    font-size: 4rem;
+    font-weight: 800;
+    margin: 20px 0;
+    /* Monospace for readability */
+    font-family: 'Courier New', Courier, monospace;
+    background: rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    border-radius: 12px;
+    word-break: break-all;
+}
+
+.qr-placeholder {
+    width: 200px;
+    height: 200px;
+    background: white;
+    margin: 20px auto;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+}
+
+/* Offline Indicator */
+.offline-banner {
+    background: var(--warning-color);
+    color: #333;
+    text-align: center;
+    padding: 8px;
+    font-weight: bold;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+.offline-banner.hidden {
+    display: none;
+}
+
+/* Status Bar */
+.status-bar {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: var(--bg-card);
+    border-bottom: 1px solid #ddd;
+}
