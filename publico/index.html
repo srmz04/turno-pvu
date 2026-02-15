@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Disponibilidad de vacunas en centros de salud de Durango">
+    <title>Disponibilidad de Vacunas - TURNO-PVU</title>
+
+    <link rel="stylesheet" href="./styles.css">
+
+    <!-- Open Graph para compartir en redes -->
+    <meta property="og:title" content="Disponibilidad de Vacunas - Durango">
+    <meta property="og:description" content="Consulta la disponibilidad de vacunas contra sarampión en tiempo real">
+    <meta property="og:type" content="website">
+
+    <meta name="theme-color" content="#2ecc71">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <h1>🏥 Disponibilidad de Vacunas</h1>
+            <p class="subtitle">Centros de Salud - Durango, México</p>
+            <p class="info">Actualización automática cada 60 segundos</p>
+        </div>
+    </header>
+
+    <!-- Controles -->
+    <div class="controls">
+        <div class="container">
+            <div class="controls-row">
+                <div class="filter-group">
+                    <label for="municipio-filter">📍 Municipio:</label>
+                    <select id="municipio-filter">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="estado-filter">🚦 Estado:</label>
+                    <select id="estado-filter">
+                        <option value="">Todos</option>
+                        <option value="DISPONIBLE">Disponible</option>
+                        <option value="ULTIMOS_TURNOS">Últimos turnos</option>
+                        <option value="AGOTADO">Agotado</option>
+                        <option value="SIN_TURNO">Sin turno</option>
+                    </select>
+                </div>
+
+                <button id="refresh-btn" class="btn-refresh">🔄 Actualizar</button>
+                <button id="theme-toggle" class="btn-theme" title="Cambiar tema">🌙</button>
+            </div>
+
+            <div id="last-update" class="last-update"></div>
+        </div>
+    </div>
+
+    <!-- Resumen general -->
+    <div class="summary" id="summary">
+        <div class="container">
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="summary-icon">✅</div>
+                    <div class="summary-value" id="total-disponibles">0</div>
+                    <div class="summary-label">Disponibles</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-icon">⚠️</div>
+                    <div class="summary-value" id="total-ultimos">0</div>
+                    <div class="summary-label">Últimos turnos</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-icon">❌</div>
+                    <div class="summary-value" id="total-agotados">0</div>
+                    <div class="summary-label">Agotados</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid de centros -->
+    <main class="main">
+        <div class="container">
+            <div id="centros-grid" class="centros-grid">
+                <!-- Las tarjetas se cargan dinámicamente -->
+            </div>
+
+            <!-- Estado vacío -->
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <div class="empty-icon">🔍</div>
+                <h2>No hay centros disponibles</h2>
+                <p>No se encontraron centros con los filtros seleccionados</p>
+            </div>
+
+            <!-- Estado de carga -->
+            <div id="loading-state" class="loading-state">
+                <div class="spinner"></div>
+                <p>Cargando información...</p>
+            </div>
+
+            <!-- Estado de error -->
+            <div id="error-state" class="error-state" style="display: none;">
+                <div class="error-icon">⚠️</div>
+                <h2>Error al cargar datos</h2>
+                <p id="error-message"></p>
+                <button onclick="location.reload()" class="btn-retry">Reintentar</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>
+                <strong>TURNO-PVU</strong> - Sistema de Gestión de Turnos para Vacunación Universal
+            </p>
+            <p>
+                Secretaría de Salud de Durango • Emergencia Sanitaria Sarampión 2025-2026
+            </p>
+            <p class="footer-note">
+                ℹ️ La información se actualiza automáticamente cada 60 segundos
+            </p>
+        </div>
+    </footer>
+
+    <script type="module" src="./app.js"></script>
+</body>
+
+</html>
