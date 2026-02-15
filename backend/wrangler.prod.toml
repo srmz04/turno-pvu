@@ -18,5 +18,5 @@ database_id = "9299c5ac-6f7a-4cee-964c-078ee4270425"
 [observability]
 enabled = true
 
-[limits]
-cpu_ms = 50
+# [limits]
+# cpu_ms = 50
