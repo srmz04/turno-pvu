@@ -31,7 +31,7 @@ class AplicadorApp {
         try {
             // Verificar autenticación
             if (!auth.isAuthenticated()) {
-                window.location.href = '../registro/index.html';
+                this.render(); // Mostrará login
                 return;
             }
 
@@ -41,7 +41,9 @@ class AplicadorApp {
             const allowedRoles = [CONFIG.ROLES.APLICADOR, CONFIG.ROLES.COORDINADOR, CONFIG.ROLES.ADMIN];
             if (!allowedRoles.includes(this.state.user.rol)) {
                 showToast('Acceso denegado. Solo para APLICADOR o superior.', 'error');
-                setTimeout(() => window.location.href = '../registro/index.html', 2000);
+                auth.logout();
+                this.state.user = null; // Forzar login
+                this.render();
                 return;
             }
 
@@ -324,6 +326,13 @@ class AplicadorApp {
     render() {
         const container = document.getElementById('main-container');
 
+        // Login View
+        if (!auth.isAuthenticated() || !this.state.user) {
+            container.innerHTML = this.renderLogin();
+            this.attachLoginListener();
+            return;
+        }
+
         // Si no hay turno activo
         if (!this.state.turnoActivo) {
             container.innerHTML = this.renderSinTurno();
@@ -341,6 +350,62 @@ class AplicadorApp {
         `;
 
         this.attachEventListeners();
+    }
+
+    renderLogin() {
+        return `
+            <div class="login-container" style="max-width: 400px; margin: 50px auto; padding: 20px;">
+                <div class="card">
+                    <h2 style="text-align: center; margin-bottom: 2rem; color: var(--primary);">Aplicación Vacunas</h2>
+                    <form id="login-form">
+                        <div class="form-group">
+                            <label>Usuario</label>
+                            <input type="text" id="login-username" class="giant-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Contraseña</label>
+                            <input type="password" id="login-password" class="giant-input" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-large" style="width: 100%;">Ingresar</button>
+                    </form>
+                </div>
+            </div>
+        `;
+    }
+
+    attachLoginListener() {
+        const loginForm = document.getElementById('login-form');
+        if (loginForm) {
+            loginForm.addEventListener('submit', (e) => this.handleLogin(e));
+        }
+    }
+
+    async handleLogin(e) {
+        e.preventDefault();
+        const username = document.getElementById('login-username').value;
+        const password = document.getElementById('login-password').value;
+
+        try {
+            const result = await auth.login(username, password);
+            if (result.success) {
+                const user = result.user;
+                const allowedRoles = ['APLICADOR', 'COORDINADOR', 'ADMIN'];
+
+                if (allowedRoles.includes(user.rol)) {
+                    this.state.user = user;
+                    // Recargar datos y renderizar interfaz completa
+                    await this.init();
+                } else {
+                    showToast('Rol no autorizado para este módulo', 'error');
+                    auth.logout();
+                }
+            } else {
+                showToast(result.error || 'Credenciales inválidas', 'error');
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            showToast('Error de conexión', 'error');
+        }
     }
 
     renderHeader() {

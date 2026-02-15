@@ -11,16 +11,15 @@ ENVIRONMENT = "development"
 [[d1_databases]]
 binding = "TURNO_PVU_DB"
 database_name = "turno-pvu-db"
-database_id = "" # Llenar después de crear la DB
+database_id = "9299c5ac-6f7a-4cee-964c-078ee4270425"
 
-# KV namespace para caché y rate limiting
-[[kv_namespaces]]
-binding = "TURNO_PVU_CACHE"
-id = "" # Crear con: npx wrangler kv:namespace create TURNO_PVU_CACHE
+# KV namespace para caché y rate limiting (comentado hasta crear el namespace)
+# [[kv_namespaces]]
+# binding = "TURNO_PVU_CACHE"
+# id = "" # Crear con: npx wrangler kv:namespace create TURNO_PVU_CACHE
 
 # Observability
 [observability]
 enabled = true
 
-[limits]
-cpu_ms = 50
+

@@ -52,7 +52,7 @@ class AuthManager {
             }
 
             this.setSession(data.token, data.user);
-            return data.user;
+            return { success: true, user: data.user };
         } catch (error) {
             console.error('Auth error:', error);
             throw error;

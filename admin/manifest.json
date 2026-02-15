@@ -1,0 +1,39 @@
+{
+  "name": "TURNO-PVU Dashboard Admin",
+  "short_name": "Admin PVU",
+  "description": "Dashboard administrativo para coordinación general de vacunación",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#667eea",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "../icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "../icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["health", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Ver estado de todos los centros",
+      "url": "./?view=dashboard",
+      "icons": [{ "src": "../icon.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Reportes",
+      "short_name": "Reportes",
+      "description": "Exportar reportes CSV",
+      "url": "./?view=reportes",
+      "icons": [{ "src": "../icon.png", "sizes": "192x192" }]
+    }
+  ]
+}

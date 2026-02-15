@@ -43,9 +43,10 @@ Shared Components
 
 - Node.js 18+
 - Cuenta de Cloudflare (free tier suficiente)
-- Wrangler CLI instalado globalmente: `npm install -g wrangler`
+- Wrangler CLI: `npm install -g wrangler`
+- Git (para control de versiones)
 
-### Instalación
+### Instalación Desarrollo Local
 
 ```bash
 # 1. Clonar repositorio
@@ -59,100 +60,240 @@ npm install
 # 3. Autenticar con Cloudflare
 npx wrangler login
 
-# 4. Crear base de datos D1
-npx wrangler d1 create turno-pvu-db
-# Copiar el database_id al wrangler.toml
-
-# 5. Ejecutar migraciones
+# 4. Configurar base de datos local
 npm run db:migrate
 npm run db:seed
 
-# 6. Configurar JWT secret
-npx wrangler secret put JWT_SECRET
-# Generar con: openssl rand -base64 32
+# Actualizar passwords con hashes reales
+npx wrangler d1 execute turno-pvu-db-dev --local --file=update-hashes.sql
 
-# 7. Crear KV namespace para caché
-npx wrangler kv:namespace create TURNO_PVU_CACHE
-# Copiar el id al wrangler.toml
-
-# 8. Desarrollo local
+# 5. Desarrollo local
 npm run dev
-# El backend estará en http://localhost:8787
+# Backend estará en http://localhost:8787
 ```
 
-### Deploy
+### Servir Frontend Localmente
 
 ```bash
-# Backend
+# En la raíz del proyecto
+npx http-server -p 8080 -c-1
+
+# Las PWAs estarán disponibles en:
+# http://localhost:8080/registro/
+# http://localhost:8080/aplicar/
+# http://localhost:8080/coordinador/
+# http://localhost:8080/admin/
+# http://localhost:8080/publico/
+```
+
+### Setup de Ambientes Remotos
+
+```bash
 cd backend
-npm run deploy
+
+# Setup completo para desarrollo
+./scripts/setup-db.sh dev
+
+# Setup completo para staging
+./scripts/setup-db.sh staging
+
+# Setup completo para producción
+./scripts/setup-db.sh prod
+```
+
+El script `setup-db.sh` realiza:
+- Crea la base de datos D1
+- Aplica el esquema completo
+- Carga datos iniciales (15 centros + usuarios)
+- Configura passwords con hashes PBKDF2
+- Configura JWT_SECRET
+
+### Deployment
+
+**Opción 1: Script Automatizado (Recomendado)**
+
+```bash
+cd backend
+
+# Deploy a desarrollo
+./scripts/deploy.sh dev
+
+# Deploy a staging
+./scripts/deploy.sh staging
+
+# Deploy a producción
+./scripts/deploy.sh prod
+```
+
+El script `deploy.sh` realiza:
+- Verificaciones pre-deployment (git status, archivos críticos, autenticación)
+- Deploy del Worker (backend)
+- Deploy de Cloudflare Pages (frontend)
+- Muestra URLs y próximos pasos
+
+**Opción 2: Deployment Manual**
+
+```bash
+# Backend (Worker)
+cd backend
+npm run deploy:prod
 
 # Frontend (Cloudflare Pages)
 cd ..
-npx wrangler pages deploy . --project-name=turno-pvu
+npx wrangler pages deploy . --project-name=turno-pvu --branch=main
 ```
+
+### Reset de Base de Datos (Solo Desarrollo)
+
+```bash
+cd backend
+npm run db:reset
+```
+
+⚠️ **Advertencia**: Esto elimina TODOS los datos locales.
 
 ## 📊 Estado del Proyecto
 
-### FASE 0: Preparación ✅ COMPLETADA
-- [x] Estructura de directorios
-- [x] .gitignore y .env.example
-- [x] Configuración de Cloudflare (wrangler.toml)
-- [x] Configuración de ambientes (dev/staging/prod)
-- [x] Documentación de deployment
+### ✅ FASES COMPLETADAS
 
-### FASE 1: Backend - Esquema de Base de Datos ✅ COMPLETADA
-- [x] schema.sql completo (14 tablas + vistas)
-- [x] seed.sql con datos iniciales
-- [x] Script de reset de DB
-- [x] Índices optimizados
+- **FASE 0**: Preparación y configuración inicial
+- **FASE 1**: Backend - Esquema de base de datos (14 tablas)
+- **FASE 2**: Backend - Worker API REST (endpoints core MVP)
+- **FASE 3**: Shared - Código compartido (api.js, auth.js, offline.js, utils.js)
+- **FASE 4**: Módulo Registro (emisión de fichas con QR + modo offline)
+- **FASE 5**: Módulo Aplicar (vacunación FIFO + indicador dinámico SRP/SR)
+- **FASE 6**: Módulo Coordinador (gestión de turnos + inventario)
+- **FASE 7**: Panel Público (consulta de disponibilidad sin autenticación)
+- **FASE 8**: Dashboard Admin (monitoreo global + gestión usuarios + reportes CSV)
+- **FASE 9**: Deploy y Configuración Final (scripts automatizados + documentación)
+- **FASE 10**: Pruebas End-to-End (23 pruebas automatizadas + guía de pruebas manuales)
 
-### FASE 2: Backend - Worker API REST (EN PROGRESO)
-- [ ] Estructura base del worker
-- [ ] Autenticación JWT
-- [ ] Endpoints de centros, turnos, fichas
-- [ ] ...
+### 🚧 EN PROGRESO
 
-Ver [task.md](task.md) para el plan completo de tareas.
+- **FASE 11**: Seguridad y Hardening
+  - Validación de inputs
+  - Security headers
+  - Auditoría de seguridad
+
+### 📋 PENDIENTES
+
+- **FASE 12**: Monitoreo y Observabilidad
+- **FASE 13**: Optimización Logística y Análisis
+
+Ver [task.md](task.md) para el plan completo de tareas y tracking detallado.
 
 ## 📁 Estructura del Proyecto
 
 ```
 TURNO-PVU/
-├── backend/              # Cloudflare Worker (API)
-│   ├── worker.js
-│   ├── schema.sql
-│   ├── seed.sql
-│   ├── package.json
-│   └── wrangler*.toml
-├── shared/               # Código compartido frontend
-│   ├── api.js
-│   ├── auth.js
-│   ├── db.js
-│   ├── sync.js
-│   └── utils.js
-├── registro/             # Módulo Registrador
-├── aplicar/              # Módulo Vacunador
-├── coordinador/          # Módulo Coordinador
-├── admin/                # Dashboard Admin
-├── publico/              # Panel Público
-├── docs/                 # Documentación
-├── tests/                # Tests automatizados
-├── scripts/              # Scripts de utilidad
-└── monitoring/           # Configuración de monitoreo
+├── backend/                      # Cloudflare Worker (API)
+│   ├── worker.js                 # Worker principal con API REST
+│   ├── schema.sql                # Esquema completo (14 tablas)
+│   ├── seed.sql                  # Datos iniciales (15 centros + usuarios)
+│   ├── update-hashes.sql         # Passwords con hashes PBKDF2
+│   ├── package.json              # Dependencias y scripts npm
+│   ├── wrangler.toml             # Config base
+│   ├── wrangler.dev.toml         # Config desarrollo
+│   ├── wrangler.staging.toml     # Config staging
+│   ├── wrangler.prod.toml        # Config producción
+│   └── scripts/
+│       ├── reset-db.sh           # Reset DB local (desarrollo)
+│       ├── setup-db.sh           # Setup DB remota (dev/staging/prod)
+│       └── deploy.sh             # Deployment automatizado
+│
+├── shared/                       # Código compartido frontend
+│   ├── config.js                 # Configuración de API endpoints
+│   ├── api.js                    # Cliente HTTP con retry
+│   ├── auth.js                   # Gestión JWT + login
+│   ├── utils.js                  # Validación, formato, etc.
+│   ├── offline.js                # IndexedDB + sync offline
+│   └── styles-base.css           # Estilos base compartidos
+│
+├── registro/                     # Módulo de emisión de fichas
+│   ├── index.html
+│   ├── app.js                    # Lógica QR + offline
+│   ├── styles.css
+│   └── manifest.json
+│
+├── aplicar/                      # Módulo de aplicación de vacunas
+│   ├── index.html
+│   ├── app.js                    # Lógica FIFO + indicador dinámico
+│   ├── styles.css
+│   └── manifest.json
+│
+├── coordinador/                  # Módulo de coordinación de centro
+│   ├── index.html
+│   ├── app.js                    # Gestión turnos + inventario
+│   ├── styles.css
+│   └── manifest.json
+│
+├── admin/                        # Dashboard administrativo
+│   ├── index.html
+│   ├── app.js                    # Dashboard global + CRUD
+│   ├── styles.css
+│   └── manifest.json
+│
+├── publico/                      # Panel público (sin autenticación)
+│   ├── index.html
+│   ├── app.js                    # Consulta de disponibilidad
+│   ├── styles.css
+│   └── manifest.json
+│
+├── docs/                         # Documentación
+│   ├── DEPLOYMENT.md             # Guía detallada de deployment
+│   └── AMBIENTES.md              # Configuración de ambientes
+│
+├── PRD_TURNO_PVU.md             # Product Requirements Document
+├── PLAN_IMPLEMENTACION.md        # Plan de implementación técnico
+├── task.md                       # Tracking de tareas por fase
+└── README.md                     # Este archivo
 ```
 
 ## 🧪 Testing
 
+### Pruebas Automatizadas End-to-End
+
 ```bash
-# Tests unitarios
+cd backend
+
+# Pruebas contra servidor local (requiere: npm run dev en otra terminal)
+npm run test:e2e
+
+# Pruebas contra ambiente de desarrollo
+npm run test:e2e:dev
+
+# Pruebas contra ambiente de staging
+npm run test:e2e:staging
+```
+
+El script ejecuta **23 pruebas automatizadas** que cubren:
+- ✅ Autenticación con todos los roles (6 tests)
+- ✅ Gestión de turnos (3 tests)
+- ✅ Emisión de fichas con validación de edad (6 tests)
+- ✅ Aplicación de vacunas (3 tests)
+- ✅ Cierre de turno (2 tests)
+- ✅ Panel público (1 test)
+- ✅ Dashboard admin (2 tests)
+
+### Pruebas Manuales
+
+Para pruebas de interfaz, modo offline, y compatibilidad, ver [docs/TESTING.md](docs/TESTING.md).
+
+Pruebas críticas manuales incluyen:
+- Modo offline (emisión de fichas sin conexión + sincronización)
+- Compatibilidad con MeeBox 2018
+- Responsive en móviles y tablets
+- Agotamiento de inventario
+- Roles y permisos
+
+### Tests Unitarios (Futuro)
+
+```bash
+# Tests unitarios con Vitest
 npm run test
 
 # Tests con coverage
 npm run test:coverage
-
-# Tests E2E (requiere Playwright)
-npm run test:e2e
 ```
 
 ## 📚 Documentación
@@ -198,12 +339,58 @@ MIT License - Ver [LICENSE](LICENSE)
 - **Operativo**: [WhatsApp/Telegram del equipo]
 - **Emergencias**: [Teléfono 24/7]
 
+## 🔑 Usuarios de Prueba
+
+Después de ejecutar el seed, están disponibles los siguientes usuarios para testing:
+
+| Usuario | Password | Rol | Centro Asignado | Descripción |
+|---------|----------|-----|-----------------|-------------|
+| `admin` | `Admin123!` | ADMIN | N/A | Dashboard global, gestión usuarios/centros |
+| `coord.cs001` | `Coord123!` | COORDINADOR | CS001 | Apertura/cierre de turnos |
+| `reg.cs001.1` | `Reg123!` | REGISTRADOR | CS001 | Emisión de fichas con QR |
+| `aplica.cs001.1` | `Aplica123!` | APLICADOR | CS001 | Aplicación de vacunas |
+
+⚠️ **IMPORTANTE**: En producción, cambiar TODAS estas contraseñas inmediatamente.
+
 ---
 
-**Estado**: 🚧 En Desarrollo Activo
-**Versión**: 1.0.0-alpha
+## 🛠️ Comandos Útiles
+
+```bash
+# Desarrollo local
+npm run dev                    # Iniciar Worker en localhost:8787
+npm run db:reset              # Reset DB local (elimina datos)
+
+# Pruebas
+npm run test:e2e              # Pruebas E2E contra local
+npm run test:e2e:dev          # Pruebas E2E contra dev
+npm run test:e2e:staging      # Pruebas E2E contra staging
+
+# Deployment
+./scripts/deploy.sh dev       # Deploy completo a desarrollo
+./scripts/deploy.sh staging   # Deploy completo a staging
+./scripts/deploy.sh prod      # Deploy completo a producción
+
+# Base de datos remota
+./scripts/setup-db.sh dev     # Setup inicial DB desarrollo
+./scripts/setup-db.sh prod    # Setup inicial DB producción
+
+# Deployment manual
+npm run deploy:dev            # Deploy solo Worker a dev
+npm run deploy:staging        # Deploy solo Worker a staging
+npm run deploy:prod           # Deploy solo Worker a prod
+
+# Monitoreo
+npx wrangler tail --config=wrangler.prod.toml    # Ver logs en tiempo real
+npx wrangler d1 list                             # Listar bases de datos
+```
+
+---
+
+**Estado**: ✅ MVP Completado - 🚧 Finalizando Deploy
+**Versión**: 1.0.0
 **Última actualización**: 14 febrero 2026
 
 ---
 
-*Sistema desarrollado con urgencia para responder a la emergencia sanitaria por brote de sarampión en Durango, México.*
+*Sistema desarrollado con urgencia para responder a la emergencia sanitaria por brote de sarampión en Durango, México. Gestiona ~50,000 niños/niñas de 6 meses a 12 años en 15 centros de salud.*

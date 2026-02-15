@@ -52,8 +52,8 @@ INSERT INTO configuracion (clave, valor, descripcion, tipo) VALUES
 
 INSERT INTO usuarios (username, password_hash, salt, nombre_completo, centro_id, rol, activo) VALUES
 ('admin', 
- 'PBKDF2_HASH_PLACEHOLDER_ADMIN',  -- Reemplazar con hash real al implementar
- 'SALT_PLACEHOLDER_ADMIN',          -- Reemplazar con salt real
+ 'TxZeeEH3og+B8KBHe5AVpNDuglXiqCv9ezMhcuCGfUg=',  -- Admin123!
+ 'udk4wSTmYnq+Z5KiqKPDdQ==',          -- Salt
  'Administrador General del Sistema',
  NULL,
  'ADMIN',
@@ -64,21 +64,21 @@ INSERT INTO usuarios (username, password_hash, salt, nombre_completo, centro_id,
 -- ============================================================================
 
 INSERT INTO usuarios (username, password_hash, salt, nombre_completo, centro_id, rol, activo) VALUES
-('coord.cs001', 'PBKDF2_HASH_PLACEHOLDER', 'SALT_PLACEHOLDER', 'Coordinador CS Durango Centro', 1, 'COORDINADOR', 1),
-('coord.cs002', 'PBKDF2_HASH_PLACEHOLDER', 'SALT_PLACEHOLDER', 'Coordinador CS Mezquital', 2, 'COORDINADOR', 1),
-('coord.cs003', 'PBKDF2_HASH_PLACEHOLDER', 'SALT_PLACEHOLDER', 'Coordinador CS Gómez Palacio', 3, 'COORDINADOR', 1),
-('coord.cs004', 'PBKDF2_HASH_PLACEHOLDER', 'SALT_PLACEHOLDER', 'Coordinador CS Vicente Guerrero', 4, 'COORDINADOR', 1),
-('coord.cs005', 'PBKDF2_HASH_PLACEHOLDER', 'SALT_PLACEHOLDER', 'Coordinador CS Santiago Papasquiaro', 5, 'COORDINADOR', 1),
-('coord.cs006', 'PBKDF2_HASH_PLACEHOLDER', 'SALT_PLACEHOLDER', 'Coordinador CS El Salto', 6, 'COORDINADOR', 1),
-('coord.cs007', 'PBKDF2_HASH_PLACEHOLDER', 'SALT_PLACEHOLDER', 'Coordinador CS Nombre de Dios', 7, 'COORDINADOR', 1),
-('coord.cs008', 'PBKDF2_HASH_PLACEHOLDER', 'SALT_PLACEHOLDER', 'Coordinador CS Guadalupe Victoria', 8, 'COORDINADOR', 1),
-('coord.cs009', 'PBKDF2_HASH_PLACEHOLDER', 'SALT_PLACEHOLDER', 'Coordinador CS Lerdo', 9, 'COORDINADOR', 1),
-('coord.cs010', 'PBKDF2_HASH_PLACEHOLDER', 'SALT_PLACEHOLDER', 'Coordinador CS Canatlán', 10, 'COORDINADOR', 1),
-('coord.cs011', 'PBKDF2_HASH_PLACEHOLDER', 'SALT_PLACEHOLDER', 'Coordinador CS Súchil', 11, 'COORDINADOR', 1),
-('coord.cs012', 'PBKDF2_HASH_PLACEHOLDER', 'SALT_PLACEHOLDER', 'Coordinador CS Tepehuanes', 12, 'COORDINADOR', 1),
-('coord.cs013', 'PBKDF2_HASH_PLACEHOLDER', 'SALT_PLACEHOLDER', 'Coordinador CS Cuencamé', 13, 'COORDINADOR', 1),
-('coord.cs014', 'PBKDF2_HASH_PLACEHOLDER', 'SALT_PLACEHOLDER', 'Coordinador CS Mapimí', 14, 'COORDINADOR', 1),
-('coord.cs015', 'PBKDF2_HASH_PLACEHOLDER', 'SALT_PLACEHOLDER', 'Coordinador CS Peñón Blanco', 15, 'COORDINADOR', 1);
+('coord.cs001', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Durango Centro', 1, 'COORDINADOR', 1),
+('coord.cs002', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Mezquital', 2, 'COORDINADOR', 1),
+('coord.cs003', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Gómez Palacio', 3, 'COORDINADOR', 1),
+('coord.cs004', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Vicente Guerrero', 4, 'COORDINADOR', 1),
+('coord.cs005', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Santiago Papasquiaro', 5, 'COORDINADOR', 1),
+('coord.cs006', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS El Salto', 6, 'COORDINADOR', 1),
+('coord.cs007', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Nombre de Dios', 7, 'COORDINADOR', 1),
+('coord.cs008', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Guadalupe Victoria', 8, 'COORDINADOR', 1),
+('coord.cs009', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Lerdo', 9, 'COORDINADOR', 1),
+('coord.cs010', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Canatlán', 10, 'COORDINADOR', 1),
+('coord.cs011', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Súchil', 11, 'COORDINADOR', 1),
+('coord.cs012', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Tepehuanes', 12, 'COORDINADOR', 1),
+('coord.cs013', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Cuencamé', 13, 'COORDINADOR', 1),
+('coord.cs014', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Mapimí', 14, 'COORDINADOR', 1),
+('coord.cs015', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Peñón Blanco', 15, 'COORDINADOR', 1);
 
 -- ============================================================================
 -- 5. REGISTRADORES Y APLICADORES DE PRUEBA
@@ -86,14 +86,14 @@ INSERT INTO usuarios (username, password_hash, salt, nombre_completo, centro_id,
 
 INSERT INTO usuarios (username, password_hash, salt, nombre_completo, centro_id, rol, activo) VALUES
 -- Registradores
-('reg.cs001.1', 'PBKDF2_HASH_PLACEHOLDER', 'SALT_PLACEHOLDER', 'María García - Registradora CS001', 1, 'REGISTRADOR', 1),
-('reg.cs001.2', 'PBKDF2_HASH_PLACEHOLDER', 'SALT_PLACEHOLDER', 'Juan Pérez - Registrador CS001', 1, 'REGISTRADOR', 1),
-('reg.cs002.1', 'PBKDF2_HASH_PLACEHOLDER', 'SALT_PLACEHOLDER', 'Ana López - Registradora CS002', 2, 'REGISTRADOR', 1),
+('reg.cs001.1', '2REbH/kLUygnbSWCgUCPAVF2D+5jBTA+d3FAa8moZTI=', 'CKrCNdr2BcKS7WVVfYATYQ==', 'María García - Registradora CS001', 1, 'REGISTRADOR', 1),
+('reg.cs001.2', '2REbH/kLUygnbSWCgUCPAVF2D+5jBTA+d3FAa8moZTI=', 'CKrCNdr2BcKS7WVVfYATYQ==', 'Juan Pérez - Registrador CS001', 1, 'REGISTRADOR', 1),
+('reg.cs002.1', '2REbH/kLUygnbSWCgUCPAVF2D+5jBTA+d3FAa8moZTI=', 'CKrCNdr2BcKS7WVVfYATYQ==', 'Ana López - Registradora CS002', 2, 'REGISTRADOR', 1),
 
 -- Aplicadores
-('aplica.cs001.1', 'PBKDF2_HASH_PLACEHOLDER', 'SALT_PLACEHOLDER', 'Dr. Carlos Hernández - Aplicador CS001', 1, 'APLICADOR', 1),
-('aplica.cs001.2', 'PBKDF2_HASH_PLACEHOLDER', 'SALT_PLACEHOLDER', 'Enf. Laura Martínez - Aplicadora CS001', 1, 'APLICADOR', 1),
-('aplica.cs002.1', 'PBKDF2_HASH_PLACEHOLDER', 'SALT_PLACEHOLDER', 'Enf. Roberto Sánchez - Aplicador CS002', 2, 'APLICADOR', 1);
+('aplica.cs001.1', '9q19zp3FEaEMZPa0/jYfUQIyrRwyfOeQ8vyBJDvBYJ4=', '3OkvcBhR9vtK912zV2rwIQ==', 'Dr. Carlos Hernández - Aplicador CS001', 1, 'APLICADOR', 1),
+('aplica.cs001.2', '9q19zp3FEaEMZPa0/jYfUQIyrRwyfOeQ8vyBJDvBYJ4=', '3OkvcBhR9vtK912zV2rwIQ==', 'Enf. Laura Martínez - Aplicadora CS001', 1, 'APLICADOR', 1),
+('aplica.cs002.1', '9q19zp3FEaEMZPa0/jYfUQIyrRwyfOeQ8vyBJDvBYJ4=', '3OkvcBhR9vtK912zV2rwIQ==', 'Enf. Roberto Sánchez - Aplicador CS002', 2, 'APLICADOR', 1);
 
 -- ============================================================================
 -- 6. LOTES DE BIOLOGICOS DE PRUEBA

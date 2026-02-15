@@ -5,7 +5,24 @@
       "Bash(/home/uy/Dropbox/srmz04/TURNO-PVU/.gitignore:*)",
       "Bash(/home/uy/Dropbox/srmz04/TURNO-PVU/.env.example:*)",
       "Bash(/home/uy/Dropbox/srmz04/TURNO-PVU/backend/package.json:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(cat:*)",
+      "Bash(git commit:*)",
+      "Bash(npm install:*)",
+      "Bash(npx wrangler d1 execute:*)",
+      "Bash(npx wrangler d1 create:*)",
+      "Bash(npx wrangler dev:*)",
+      "Bash(curl:*)",
+      "Bash(chmod:*)",
+      "Bash(pkill:*)",
+      "Bash(npx wrangler whoami:*)",
+      "Bash(npx wrangler d1 list:*)",
+      "Bash(npx wrangler deploy:*)",
+      "Bash(npx wrangler pages deploy:*)",
+      "Bash(npx wrangler pages project list:*)",
+      "Bash(node scripts/generate-compatible-hashes.js:*)",
+      "Bash(node -c:*)",
+      "Bash(jq:*)"
     ]
   }
 }
