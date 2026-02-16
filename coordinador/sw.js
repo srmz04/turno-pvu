@@ -3,7 +3,7 @@
  * FASE 6 - TURNO-PVU
  */
 
-const CACHE_NAME = 'turno-pvu-coordinador-v4-crossbrowser';
+const CACHE_NAME = 'turno-pvu-coordinador-v4-force';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -22,7 +22,7 @@ const ASSETS_TO_CACHE = [
 
 // Instalación
 self.addEventListener('install', (event) => {
-    console.log('[SW] Instalando Service Worker - Módulo Coordinador v4 (Cross-browser)');
+    console.log('[SW] Instalando Service Worker - Módulo Coordinador v4 Force Update');
 
     event.waitUntil(
         caches.open(CACHE_NAME)
