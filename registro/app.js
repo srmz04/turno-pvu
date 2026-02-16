@@ -264,6 +264,23 @@ class RegistroApp {
       return;
     }
 
+    // NUEVO: Validar antecedentes para menores de 12 años (SRP/SR)
+    // Regla: 6 meses a < 13 años (según reglas de vacunación)
+    // Usamos eligibility.biologics para saber si es candidato a SRP/SR
+    const isCandidateSRPSR = eligibility.biologics.some(b => ['SRP', 'SR'].includes(b));
+
+    if (isCandidateSRPSR) {
+      this.pendingFormData = {
+        edad_anios: anios,
+        edad_meses: meses,
+        sexo: sexo,
+        biologics: eligibility.biologics,
+        idempotency_key: crypto.randomUUID()
+      };
+      this.renderAntecedentesModal();
+      return;
+    }
+
     // 2. Check for VPH override
     this.state.formData = {
       edad_anios: anios,
@@ -274,6 +291,56 @@ class RegistroApp {
     };
 
     if (eligibility.biologics.includes('VPH')) {
+      this.renderVPHModal();
+    } else {
+      this.submitFicha();
+    }
+  }
+
+  renderAntecedentesModal() {
+    const modalHtml = `
+      <div id="antecedentes-modal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:2000;display:flex;justify-content:center;align-items:center;">
+        <div class="card" style="width:90%;max-width:500px;text-align:center;">
+          <h2 style="color:var(--primary-color);margin-bottom:1rem;">Antecedentes de Vacunación</h2>
+          <p style="font-size:1.2rem;margin-bottom:2rem;">
+            ¿Cuántas dosis de vacuna <strong>Triple Viral (SRP)</strong> o <strong>Doble Viral (SR)</strong> tiene el paciente?
+          </p>
+          
+          <div style="display:flex;flex-direction:column;gap:15px;">
+             <button type="button" class="btn btn-secondary btn-large" onclick="app.resolveAntecedentes(0)">
+                <i class="fas fa-times-circle"></i> 0 Dosis (Ninguna)
+             </button>
+             <button type="button" class="btn btn-secondary btn-large" onclick="app.resolveAntecedentes(1)">
+                <i class="fas fa-check-circle"></i> 1 Dosis (Incompleto)
+             </button>
+             <button type="button" class="btn btn-primary btn-large" style="background-color:#d32f2f;" onclick="app.resolveAntecedentes(2)">
+                <i class="fas fa-check-double"></i> 2 Dosis (Esquema Completo)
+             </button>
+          </div>
+          <button class="btn btn-outline" style="margin-top:20px;" onclick="document.getElementById('antecedentes-modal').remove()">Cancelar</button>
+        </div>
+      </div>
+    `;
+    this.appEl.insertAdjacentHTML('beforeend', modalHtml);
+  }
+
+  resolveAntecedentes(dosis) {
+    document.getElementById('antecedentes-modal').remove();
+
+    if (dosis === 2) {
+      this.renderRejection("El paciente ya cuenta con esquema completo (2 dosis). No requiere vacunación adicional.");
+      return;
+    }
+
+    // Si tiene 0 o 1 dosis, procedemos.
+    // Recuperamos datos pendientes
+    this.state.formData = this.pendingFormData;
+
+    // Guardamos antecedente (opcional, por si el backend lo quiere guardar)
+    this.state.formData.antecedentes_dosis = dosis;
+
+    // Continuamos a VPH check si aplica, o submit directo
+    if (this.state.formData.biologics.includes('VPH')) {
       this.renderVPHModal();
     } else {
       this.submitFicha();
