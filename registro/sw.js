@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pvu-registro-v2';
+const CACHE_NAME = 'pvu-registro-v3-crossbrowser';
 const ASSETS = [
     './',
     './index.html',
@@ -18,17 +18,25 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
+    console.log('[SW] Instalando Service Worker - Módulo Registro v3 (Cross-browser)');
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+        caches.open(CACHE_NAME).then((cache) => {
+            console.log('[SW] Cacheando assets');
+            return cache.addAll(ASSETS);
+        })
     );
     self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
+    console.log('[SW] Activando Service Worker v3 (Cross-browser)');
     event.waitUntil(
         caches.keys().then((keys) => Promise.all(
             keys.map((key) => {
-                if (key !== CACHE_NAME) return caches.delete(key);
+                if (key !== CACHE_NAME) {
+                    console.log('[SW] Eliminando caché antiguo:', key);
+                    return caches.delete(key);
+                }
             })
         ))
     );
@@ -36,6 +44,13 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+    const url = new URL(event.request.url);
+
+    // Ignorar requests no-http (chrome-extension://, moz-extension://, etc)
+    if (!url.protocol.startsWith('http')) {
+        return;
+    }
+
     // Strategy: Network First for API, Cache First for Assets
     if (event.request.url.includes('/api/')) {
         event.respondWith(
