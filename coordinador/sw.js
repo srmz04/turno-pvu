@@ -3,7 +3,7 @@
  * FASE 6 - TURNO-PVU
  */
 
-const CACHE_NAME = 'turno-pvu-coordinador-v3';
+const CACHE_NAME = 'turno-pvu-coordinador-v4-crossbrowser';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -22,7 +22,7 @@ const ASSETS_TO_CACHE = [
 
 // Instalación
 self.addEventListener('install', (event) => {
-    console.log('[SW] Instalando Service Worker - Módulo Coordinador v3');
+    console.log('[SW] Instalando Service Worker - Módulo Coordinador v4 (Cross-browser)');
 
     event.waitUntil(
         caches.open(CACHE_NAME)
@@ -36,7 +36,7 @@ self.addEventListener('install', (event) => {
 
 // Activación
 self.addEventListener('activate', (event) => {
-    console.log('[SW] Activando Service Worker v3');
+    console.log('[SW] Activando Service Worker v4 (Cross-browser)');
 
     event.waitUntil(
         caches.keys()
@@ -59,7 +59,7 @@ self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);
 
-    // Ignorar requests no-http (ej: chrome-extension://)
+    // Ignorar requests no-http (ej: chrome-extension://, moz-extension://)
     if (!url.protocol.startsWith('http')) {
         return;
     }
@@ -82,14 +82,32 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
+    // Helper: detectar si es un asset crítico (HTML, JS, CSS)
+    // Compatible con Chrome, Firefox, Safari
+    const isCriticalAsset = () => {
+        // Navegación (HTML)
+        if (request.mode === 'navigate') return true;
+
+        // Detección por destination (Chrome, Firefox moderno)
+        if (request.destination === 'script' ||
+            request.destination === 'style' ||
+            request.destination === 'document') return true;
+
+        // Detección por extensión (fallback para navegadores sin destination)
+        const urlPath = url.pathname.toLowerCase();
+        if (urlPath.endsWith('.js') ||
+            urlPath.endsWith('.css') ||
+            urlPath.endsWith('.html')) return true;
+
+        // Detección por tipo de solicitud
+        if (request.url.includes('.js') || request.url.includes('.css')) return true;
+
+        return false;
+    };
+
     // Assets criticos (HTML, JS, CSS): Network First -> Falling back to Cache
     // Esto asegura que siempre busquemos la version mas nueva
-    if (request.mode === 'navigate' ||
-        request.destination === 'script' ||
-        request.destination === 'style' ||
-        request.url.includes('.js') ||
-        request.url.includes('.css')) {
-
+    if (isCriticalAsset()) {
         event.respondWith(
             fetch(request)
                 .then((networkResponse) => {

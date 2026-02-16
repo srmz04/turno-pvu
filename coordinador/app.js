@@ -8,7 +8,7 @@ import { api } from '../shared/api.js';
 import { auth } from '../shared/auth.js';
 import { db } from '../shared/db.js';
 import { syncManager } from '../shared/sync.js';
-import { showToast, formatTime } from '../shared/utils.js';
+import { showToast, formatTime, copyToClipboard } from '../shared/utils.js';
 import { monitor } from '../shared/monitoring.js';
 
 class CoordinadorApp {
@@ -284,12 +284,19 @@ class CoordinadorApp {
                     <p><strong>Fichas no utilizadas:</strong> ${resultado.no_utilizadas || 0}</p>
                 </div>
                 <div class="modal-buttons">
-                    <button class="btn btn-primary" onclick="this.closest('.modal-overlay').remove()">
+                    <button class="btn btn-primary" data-modal-action="close-summary">
                         Cerrar
                     </button>
                 </div>
             </div>
         `;
+
+        // Event listener para cerrar el modal
+        const btnClose = modal.querySelector('[data-modal-action="close-summary"]');
+        btnClose.addEventListener('click', () => {
+            modal.remove();
+        });
+
         document.body.appendChild(modal);
     }
 
@@ -335,15 +342,33 @@ class CoordinadorApp {
                     ${dispositivo.url_generada}
                 </div>
                 <div class="modal-buttons">
-                    <button class="btn btn-primary" onclick="navigator.clipboard.writeText('${dispositivo.url_generada}'); alert('URL copiada')">
+                    <button class="btn btn-primary" data-modal-action="copy-url">
                         Copiar URL
                     </button>
-                    <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">
+                    <button class="btn btn-secondary" data-modal-action="close">
                         Cerrar
                     </button>
                 </div>
             </div>
         `;
+
+        // Event listeners para los botones del modal
+        const btnCopy = modal.querySelector('[data-modal-action="copy-url"]');
+        const btnClose = modal.querySelector('[data-modal-action="close"]');
+
+        btnCopy.addEventListener('click', async () => {
+            const success = await copyToClipboard(dispositivo.url_generada);
+            if (success) {
+                showToast('URL copiada al portapapeles', 'success');
+            } else {
+                showToast('No se pudo copiar. Copia manualmente la URL', 'error');
+            }
+        });
+
+        btnClose.addEventListener('click', () => {
+            modal.remove();
+        });
+
         document.body.appendChild(modal);
     }
 
@@ -844,7 +869,7 @@ class CoordinadorApp {
                                         <div class="url-display">${d.url_generada || 'N/A'}</div>
                                     </td>
                                     <td>
-                                        <button class="btn-copiar" onclick="navigator.clipboard.writeText('${d.url_generada}'); alert('Copiado')">
+                                        <button class="btn-copiar" data-url="${d.url_generada}">
                                             Copiar
                                         </button>
                                         <button class="btn-revocar" data-dispositivo-id="${d.id}">
@@ -1074,6 +1099,20 @@ class CoordinadorApp {
         if (btnCrearAplic) {
             btnCrearAplic.addEventListener('click', () => this.crearDispositivo('APLICADOR'));
         }
+
+        // Botones copiar URL
+        const btnCopiar = document.querySelectorAll('.btn-copiar[data-url]');
+        btnCopiar.forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const url = btn.dataset.url;
+                const success = await copyToClipboard(url);
+                if (success) {
+                    showToast('URL copiada al portapapeles', 'success');
+                } else {
+                    showToast('No se pudo copiar. Copia manualmente la URL', 'error');
+                }
+            });
+        });
 
         // Botones revocar dispositivo
         const btnRevocar = document.querySelectorAll('[data-dispositivo-id]');
