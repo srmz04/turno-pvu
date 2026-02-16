@@ -1540,54 +1540,100 @@ async function handleCorteManual(request, env) {
   const body = await getRequestBody(request);
   if (!body) return errorResponse('Request body required', 400);
 
+  // turno_id es opcional: se puede hacer corte sin turno activo
   const errors = validateInput(body, {
-    turno_id: { required: true, type: 'number' },
+    turno_id: { required: false, type: 'number' },
     srp_restantes: { required: false, type: 'number', min: 0 },
     sr_restantes: { required: false, type: 'number', min: 0 },
     vph_restantes: { required: false, type: 'number', min: 0 },
+    srp_aplicadas: { required: false, type: 'number', min: 0 },
+    sr_aplicadas: { required: false, type: 'number', min: 0 },
+    vph_aplicadas: { required: false, type: 'number', min: 0 },
+    srp_inicial: { required: false, type: 'number', min: 0 },
+    sr_inicial: { required: false, type: 'number', min: 0 },
+    vph_inicial: { required: false, type: 'number', min: 0 },
+    srp_entradas: { required: false, type: 'number', min: 0 },
+    sr_entradas: { required: false, type: 'number', min: 0 },
+    vph_entradas: { required: false, type: 'number', min: 0 },
+    fichas_distribuidas: { required: false, type: 'number', min: 0 },
+    fichas_entregadas: { required: false, type: 'number', min: 0 },
+    fichas_restantes: { required: false, type: 'number', min: 0 },
     notas: { required: false, type: 'string' }
   });
 
   if (errors) return errorResponse(errors.join(', '), 400, 'VALIDATION_ERROR');
 
   try {
-    // Verificar que el turno existe y pertenece al centro del usuario
-    const turno = await env.TURNO_PVU_DB.prepare(`
-      SELECT * FROM turnos WHERE id = ?
-    `).bind(body.turno_id).first();
+    // Si hay turno_id, verificar que existe y pertenece al centro del usuario
+    let turnoId = body.turno_id || null;
+    if (turnoId) {
+      const turno = await env.TURNO_PVU_DB.prepare(`
+        SELECT * FROM turnos WHERE id = ?
+      `).bind(turnoId).first();
 
-    if (!turno) {
-      return errorResponse('Turno not found', 404, 'NOT_FOUND');
+      if (!turno) {
+        return errorResponse('Turno not found', 404, 'NOT_FOUND');
+      }
+
+      if (authResult.rol === 'COORDINADOR' && turno.centro_id !== authResult.centroId) {
+        return errorResponse('No puedes hacer cortes en turnos de otro centro', 403, 'FORBIDDEN');
+      }
     }
 
-    if (authResult.rol === 'COORDINADOR' && turno.centro_id !== authResult.centroId) {
-      return errorResponse('No puedes hacer cortes en turnos de otro centro', 403, 'FORBIDDEN');
-    }
-
-    // Insertar corte manual
+    // Insertar corte manual con campos de fichas y dosis aplicadas
     await env.TURNO_PVU_DB.prepare(`
-      INSERT INTO cortes_manuales (turno_id, usuario_id, srp_restantes, sr_restantes, vph_restantes, notas, ts)
-      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+      INSERT INTO cortes_manuales (turno_id, usuario_id,
+        srp_restantes, sr_restantes, vph_restantes,
+        srp_aplicadas, sr_aplicadas, vph_aplicadas,
+        srp_inicial, sr_inicial, vph_inicial,
+        srp_entradas, sr_entradas, vph_entradas,
+        fichas_distribuidas, fichas_entregadas, fichas_restantes,
+        notas, ts)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
     `).bind(
-      body.turno_id,
+      turnoId,
       authResult.userId,
       body.srp_restantes || null,
       body.sr_restantes || null,
       body.vph_restantes || null,
+      body.srp_aplicadas || 0,
+      body.sr_aplicadas || 0,
+      body.vph_aplicadas || 0,
+      body.srp_inicial || 0,
+      body.sr_inicial || 0,
+      body.vph_inicial || 0,
+      body.srp_entradas || 0,
+      body.sr_entradas || 0,
+      body.vph_entradas || 0,
+      body.fichas_distribuidas || 0,
+      body.fichas_entregadas || 0,
+      body.fichas_restantes || 0,
       body.notas || null
     ).run();
 
-    // Registrar en auditoría
+    // Registrar en auditoria
     await env.TURNO_PVU_DB.prepare(`
       INSERT INTO auditoria (usuario_id, accion, entidad, entidad_id, detalle, ts)
       VALUES (?, 'CORTE_MANUAL', 'turno', ?, ?, datetime('now'))
     `).bind(
       authResult.userId,
-      body.turno_id,
+      turnoId || 0,
       JSON.stringify({
         srp_restantes: body.srp_restantes,
         sr_restantes: body.sr_restantes,
         vph_restantes: body.vph_restantes,
+        srp_aplicadas: body.srp_aplicadas,
+        sr_aplicadas: body.sr_aplicadas,
+        vph_aplicadas: body.vph_aplicadas,
+        srp_inicial: body.srp_inicial,
+        sr_inicial: body.sr_inicial,
+        vph_inicial: body.vph_inicial,
+        srp_entradas: body.srp_entradas,
+        sr_entradas: body.sr_entradas,
+        vph_entradas: body.vph_entradas,
+        fichas_distribuidas: body.fichas_distribuidas,
+        fichas_entregadas: body.fichas_entregadas,
+        fichas_restantes: body.fichas_restantes,
         notas: body.notas
       })
     ).run();

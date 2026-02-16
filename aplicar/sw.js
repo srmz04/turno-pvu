@@ -3,7 +3,7 @@
  * FASE 5 - TURNO-PVU
  */
 
-const CACHE_NAME = 'turno-pvu-aplicar-v2';
+const CACHE_NAME = 'turno-pvu-aplicar-v3-force-reload';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -22,7 +22,7 @@ const ASSETS_TO_CACHE = [
 
 // Instalación - cachear assets
 self.addEventListener('install', (event) => {
-    console.log('[SW] Instalando Service Worker - Módulo Aplicar');
+    console.log('[SW] Instalando Service Worker - Módulo Aplicar v3 (Cross-browser)');
 
     event.waitUntil(
         caches.open(CACHE_NAME)
@@ -36,7 +36,7 @@ self.addEventListener('install', (event) => {
 
 // Activación - limpiar cachés antiguos
 self.addEventListener('activate', (event) => {
-    console.log('[SW] Activando Service Worker');
+    console.log('[SW] Activando Service Worker v3 (Cross-browser)');
 
     event.waitUntil(
         caches.keys()
@@ -58,6 +58,11 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);
+
+    // Ignorar requests no-http (chrome-extension://, moz-extension://, etc)
+    if (!url.protocol.startsWith('http')) {
+        return;
+    }
 
     // API requests: Network First (con fallback a error, NO cache)
     if (url.pathname.includes('/api/')) {
