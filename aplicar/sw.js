@@ -3,7 +3,7 @@
  * FASE 5 - TURNO-PVU
  */
 
-const CACHE_NAME = 'turno-pvu-aplicar-v3-crossbrowser';
+const CACHE_NAME = 'turno-pvu-aplicar-v3-force-reload';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pvu-registro-v3-crossbrowser';
+const CACHE_NAME = 'pvu-registro-v3-force-reload';
 const ASSETS = [
     './',
     './index.html',
