@@ -425,11 +425,13 @@ async function handleLogin(request, env) {
     }
 
     // Verificar intentos fallidos
+    /*
     if (user.intentos_fallidos >= 5) {
       // await logAudit(env, user.id, 'LOGIN_BLOCKED', 'usuario', user.id,
       //   'Account locked due to too many failed attempts', ip, request.headers.get('User-Agent'));
       return errorResponse('Account locked - Contact administrator', 403, 'ACCOUNT_LOCKED');
     }
+    */
 
     // Verificar password
     console.log('[LOGIN] Verificando password...');
@@ -623,7 +625,7 @@ async function handleAbrirTurno(request, env) {
     // Verificar que no existe turno abierto del mismo tipo hoy
     const existente = await env.TURNO_PVU_DB.prepare(`
       SELECT id FROM turnos
-      WHERE centro_id = ? AND fecha = ? AND tipo = ?
+      WHERE centro_id = ? AND fecha = ? AND tipo = ? AND abierto = 1
     `).bind(authResult.centroId, fecha, tipo).first();
 
     if (existente) {
@@ -1577,6 +1579,39 @@ async function handleCorteManual(request, env) {
 
       if (authResult.rol === 'COORDINADOR' && turno.centro_id !== authResult.centroId) {
         return errorResponse('No puedes hacer cortes en turnos de otro centro', 403, 'FORBIDDEN');
+      }
+
+      // ----------------------------------------------------------------------
+      // NUEVO: Actualizar el inventario base del turno para reflejar el corte
+      // Esto asegura que el Dashboard Publico (que lee de 'turnos') se actualice
+      // Formula: NuevoInicial = RestantesReportados + EmitidasActuales
+      // Asi: Disponibilidad = (NuevoInicial - Emitidas) = RestantesReportados
+      // ----------------------------------------------------------------------
+      const updates = [];
+      const params = [];
+
+      if (body.srp_restantes !== undefined && body.srp_restantes !== null) {
+        const nuevoInicial = body.srp_restantes + (turno.srp_emitidas || 0);
+        updates.push('srp_inicial = ?');
+        params.push(nuevoInicial);
+      }
+      if (body.sr_restantes !== undefined && body.sr_restantes !== null) {
+        const nuevoInicial = body.sr_restantes + (turno.sr_emitidas || 0);
+        updates.push('sr_inicial = ?');
+        params.push(nuevoInicial);
+      }
+      if (body.vph_restantes !== undefined && body.vph_restantes !== null) {
+        const nuevoInicial = body.vph_restantes + (turno.vph_emitidas || 0);
+        updates.push('vph_inicial = ?');
+        params.push(nuevoInicial);
+      }
+
+      if (updates.length > 0) {
+        // Ejecutar UPDATE en turnos
+        params.push(turnoId);
+        await env.TURNO_PVU_DB.prepare(
+          `UPDATE turnos SET ${updates.join(', ')} WHERE id = ?`
+        ).bind(...params).run();
       }
     }
 
