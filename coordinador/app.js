@@ -34,6 +34,9 @@ class CoordinadorApp {
                 srp_restantes: 0,
                 sr_restantes: 0,
                 vph_restantes: 0,
+                srp_aplicadas: 0,
+                sr_aplicadas: 0,
+                vph_aplicadas: 0,
                 fichas_distribuidas: 0,
                 fichas_entregadas: 0,
                 notas: ''
@@ -438,6 +441,9 @@ class CoordinadorApp {
                 fichas_distribuidas: fichasDistribuidas,
                 fichas_entregadas: fichasEntregadas,
                 fichas_restantes: fichasRestantes,
+                srp_aplicadas: parseInt(form.srp_aplicadas, 10) || 0,
+                sr_aplicadas: parseInt(form.sr_aplicadas, 10) || 0,
+                vph_aplicadas: parseInt(form.vph_aplicadas, 10) || 0,
                 notas: form.notas
             };
 
@@ -456,6 +462,9 @@ class CoordinadorApp {
                 srp_restantes: 0,
                 sr_restantes: 0,
                 vph_restantes: 0,
+                srp_aplicadas: 0,
+                sr_aplicadas: 0,
+                vph_aplicadas: 0,
                 fichas_distribuidas: 0,
                 fichas_entregadas: 0,
                 notas: ''
@@ -956,40 +965,29 @@ class CoordinadorApp {
                     </p>
                 </div>
 
-                <!-- Seccion: Existencias de biologico -->
+                <!-- Seccion: Existencias y Aplicación -->
                 <div class="form-section">
-                    <h3>Existencias de Biologico</h3>
-                    <div class="inventario-inputs">
-                        <div class="inventario-input-group">
-                            <span class="badge badge-srp">SRP</span>
-                            <label>Restantes:</label>
-                            <input
-                                type="number"
-                                min="0"
-                                value="${this.state.formCorteManual.srp_restantes}"
-                                data-corte-field="srp_restantes"
-                            />
-                        </div>
-                        <div class="inventario-input-group">
-                            <span class="badge badge-sr">SR</span>
-                            <label>Restantes:</label>
-                            <input
-                                type="number"
-                                min="0"
-                                value="${this.state.formCorteManual.sr_restantes}"
-                                data-corte-field="sr_restantes"
-                            />
-                        </div>
-                        <div class="inventario-input-group">
-                            <span class="badge badge-vph">VPH</span>
-                            <label>Restantes:</label>
-                            <input
-                                type="number"
-                                min="0"
-                                value="${this.state.formCorteManual.vph_restantes}"
-                                data-corte-field="vph_restantes"
-                            />
-                        </div>
+                    <h3>Reporte de Biológico</h3>
+                    <div style="display: grid; grid-template-columns: min-content 1fr 1fr; gap: 10px; align-items: center; min-width: 0;">
+                        <!-- Headers -->
+                        <div></div>
+                        <div style="text-align: center; font-weight: bold; font-size: 0.9em;">Restantes</div>
+                        <div style="text-align: center; font-weight: bold; font-size: 0.9em;">Aplicadas</div>
+
+                        <!-- SRP -->
+                        <span class="badge badge-srp">SRP</span>
+                        <input type="number" min="0" value="${this.state.formCorteManual.srp_restantes}" data-corte-field="srp_restantes" placeholder="0" style="width: 100%">
+                        <input type="number" min="0" value="${this.state.formCorteManual.srp_aplicadas}" data-corte-field="srp_aplicadas" placeholder="0" style="width: 100%">
+
+                        <!-- SR -->
+                        <span class="badge badge-sr">SR</span>
+                        <input type="number" min="0" value="${this.state.formCorteManual.sr_restantes}" data-corte-field="sr_restantes" placeholder="0" style="width: 100%">
+                        <input type="number" min="0" value="${this.state.formCorteManual.sr_aplicadas}" data-corte-field="sr_aplicadas" placeholder="0" style="width: 100%">
+
+                        <!-- VPH -->
+                        <span class="badge badge-vph">VPH</span>
+                        <input type="number" min="0" value="${this.state.formCorteManual.vph_restantes}" data-corte-field="vph_restantes" placeholder="0" style="width: 100%">
+                        <input type="number" min="0" value="${this.state.formCorteManual.vph_aplicadas}" data-corte-field="vph_aplicadas" placeholder="0" style="width: 100%">
                     </div>
                 </div>
 
