@@ -80,25 +80,31 @@ export function isValidJSON(str) {
 /**
  * Obtiene el estado de la red estimado
  * Returns: '4g', '3g', '2g', 'slow-2g', or 'unknown'
+ * Compatible con Chrome, Firefox, Edge. Safari siempre retorna 'unknown'
  */
 export function getNetworkQuality() {
-    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    return conn ? conn.effectiveType : 'unknown';
+    try {
+        const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        return conn?.effectiveType || 'unknown';
+    } catch (err) {
+        console.warn('Network Information API no soportada:', err);
+        return 'unknown';
+    }
 }
 
 /**
  * Intenta obtener el nivel de bateria
  * Returns promise resolving to level (0-1) or null
+ * NOTA: Solo funciona en Chrome/Edge. Firefox/Safari retornan null
  */
 export async function getBatteryLevel() {
-    if ('getBattery' in navigator) {
-        try {
+    try {
+        if ('getBattery' in navigator && typeof navigator.getBattery === 'function') {
             const battery = await navigator.getBattery();
-            return battery.level;
-        } catch (e) {
-            console.warn('Battery API error', e);
-            return null;
+            return battery?.level ?? null;
         }
+    } catch (e) {
+        console.warn('Battery API no soportada:', e);
     }
     return null;
 }
@@ -116,4 +122,41 @@ export function debounce(func, wait) {
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
     };
+}
+
+/**
+ * Copia texto al portapapeles con fallback para todos los navegadores
+ * @param {string} text - Texto a copiar
+ * @returns {Promise<boolean>} - true si se copió exitosamente
+ */
+export async function copyToClipboard(text) {
+    // Método 1: Clipboard API moderna (Chrome, Firefox moderno, Safari moderno)
+    if (navigator.clipboard && window.isSecureContext) {
+        try {
+            await navigator.clipboard.writeText(text);
+            return true;
+        } catch (err) {
+            console.warn('Clipboard API falló, usando fallback:', err);
+        }
+    }
+
+    // Método 2: Fallback usando execCommand (compatible con todos los navegadores)
+    try {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+
+        return successful;
+    } catch (err) {
+        console.error('Fallback de clipboard también falló:', err);
+        return false;
+    }
 }
