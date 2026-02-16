@@ -179,8 +179,15 @@ class RegistroApp {
             </div>
             
             <div class="form-group">
-              <label>Edad (Meses)</label>
-              <input type="number" id="edad_meses" class="giant-input" min="0" max="11" required placeholder="0">
+              <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <input type="checkbox" id="tiene_meses" style="width: 24px; height: 24px; margin-right: 10px;" onchange="app.toggleMeses(this.checked)">
+                <label for="tiene_meses" style="font-size: 1.2rem; margin: 0;">¿Tiene meses adicionales?</label>
+              </div>
+              
+              <div id="container_meses" class="hidden">
+                <label>Edad (Meses)</label>
+                <input type="number" id="edad_meses" class="giant-input" min="0" max="11" placeholder="0">
+              </div>
             </div>
 
             <!-- Sexo -->
@@ -211,6 +218,19 @@ class RegistroApp {
     document.getElementById('registro-form').onsubmit = (e) => this.handleFormSubmit(e);
   }
 
+  toggleMeses(show) {
+    const container = document.getElementById('container_meses');
+    const input = document.getElementById('edad_meses');
+
+    if (show) {
+      container.classList.remove('hidden');
+      input.focus();
+    } else {
+      container.classList.add('hidden');
+      input.value = '';
+    }
+  }
+
   selectSex(val) {
     document.getElementById('sexo').value = val;
     document.querySelectorAll('.sex-btn').forEach(btn => btn.classList.remove('selected'));
@@ -221,7 +241,14 @@ class RegistroApp {
     e.preventDefault();
 
     const anios = parseInt(document.getElementById('edad_anios').value);
-    const meses = parseInt(document.getElementById('edad_meses').value);
+
+    // Meses es opcional ahora
+    let meses = 0;
+    const mesesInput = document.getElementById('edad_meses');
+    if (mesesInput && !mesesInput.closest('.hidden') && mesesInput.value) {
+      meses = parseInt(mesesInput.value);
+    }
+
     const sexo = document.getElementById('sexo').value;
 
     if (!sexo) {

@@ -1,4 +1,7 @@
-/* srmz04/turno-pvu - Registro Styles */
+/* Global Utility */
+.hidden {
+    display: none !important;
+}
 
 /* Layout específico para iPad/Tablet en horizontal o vertical */
 #app {
