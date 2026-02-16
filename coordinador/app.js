@@ -444,6 +444,12 @@ class CoordinadorApp {
                 srp_aplicadas: parseInt(form.srp_aplicadas, 10) || 0,
                 sr_aplicadas: parseInt(form.sr_aplicadas, 10) || 0,
                 vph_aplicadas: parseInt(form.vph_aplicadas, 10) || 0,
+                srp_inicial: parseInt(form.srp_inicial, 10) || 0,
+                sr_inicial: parseInt(form.sr_inicial, 10) || 0,
+                vph_inicial: parseInt(form.vph_inicial, 10) || 0,
+                srp_entradas: parseInt(form.srp_entradas, 10) || 0,
+                sr_entradas: parseInt(form.sr_entradas, 10) || 0,
+                vph_entradas: parseInt(form.vph_entradas, 10) || 0,
                 notas: form.notas
             };
 
@@ -965,31 +971,93 @@ class CoordinadorApp {
                     </p>
                 </div>
 
-                <!-- Seccion: Existencias y Aplicación -->
+                <!-- Sección 1: Inventario Inicial -->
                 <div class="form-section">
-                    <h3>Reporte de Biológico</h3>
-                    <div style="display: grid; grid-template-columns: min-content 1fr 1fr; gap: 10px; align-items: center; min-width: 0;">
-                        <!-- Headers -->
-                        <div></div>
-                        <div style="text-align: center; font-weight: bold; font-size: 0.9em;">Restantes</div>
-                        <div style="text-align: center; font-weight: bold; font-size: 0.9em;">Aplicadas</div>
-
-                        <!-- SRP -->
+                    <h3>1. Inventario Inicial</h3>
+                    <div class="inventario-inputs-grid">
+                        <div class="grid-header"></div>
+                        <div class="grid-header">Cantidad</div>
+                        
                         <span class="badge badge-srp">SRP</span>
-                        <input type="number" min="0" value="${this.state.formCorteManual.srp_restantes}" data-corte-field="srp_restantes" placeholder="0" style="width: 100%">
-                        <input type="number" min="0" value="${this.state.formCorteManual.srp_aplicadas}" data-corte-field="srp_aplicadas" placeholder="0" style="width: 100%">
-
-                        <!-- SR -->
+                        <input type="number" min="0" value="${this.state.formCorteManual.srp_inicial}" data-corte-field="srp_inicial" placeholder="0">
+                        
                         <span class="badge badge-sr">SR</span>
-                        <input type="number" min="0" value="${this.state.formCorteManual.sr_restantes}" data-corte-field="sr_restantes" placeholder="0" style="width: 100%">
-                        <input type="number" min="0" value="${this.state.formCorteManual.sr_aplicadas}" data-corte-field="sr_aplicadas" placeholder="0" style="width: 100%">
-
-                        <!-- VPH -->
+                        <input type="number" min="0" value="${this.state.formCorteManual.sr_inicial}" data-corte-field="sr_inicial" placeholder="0">
+                        
                         <span class="badge badge-vph">VPH</span>
-                        <input type="number" min="0" value="${this.state.formCorteManual.vph_restantes}" data-corte-field="vph_restantes" placeholder="0" style="width: 100%">
-                        <input type="number" min="0" value="${this.state.formCorteManual.vph_aplicadas}" data-corte-field="vph_aplicadas" placeholder="0" style="width: 100%">
+                        <input type="number" min="0" value="${this.state.formCorteManual.vph_inicial}" data-corte-field="vph_inicial" placeholder="0">
                     </div>
                 </div>
+
+                <!-- Sección 2: Dosis Aplicadas -->
+                <div class="form-section">
+                    <h3>2. Dosis Aplicadas (Extra-sistema)</h3>
+                    <div class="inventario-inputs-grid">
+                        <div class="grid-header"></div>
+                        <div class="grid-header">Cantidad</div>
+
+                        <span class="badge badge-srp">SRP</span>
+                        <input type="number" min="0" value="${this.state.formCorteManual.srp_aplicadas}" data-corte-field="srp_aplicadas" placeholder="0">
+                        
+                        <span class="badge badge-sr">SR</span>
+                        <input type="number" min="0" value="${this.state.formCorteManual.sr_aplicadas}" data-corte-field="sr_aplicadas" placeholder="0">
+                        
+                        <span class="badge badge-vph">VPH</span>
+                        <input type="number" min="0" value="${this.state.formCorteManual.vph_aplicadas}" data-corte-field="vph_aplicadas" placeholder="0">
+                    </div>
+                </div>
+
+                <!-- Sección 3: Alta de Biológico -->
+                <div class="form-section">
+                    <h3>3. Alta de Biológico (Entradas)</h3>
+                    <div class="inventario-inputs-grid">
+                        <div class="grid-header"></div>
+                        <div class="grid-header">Cantidad</div>
+
+                        <span class="badge badge-srp">SRP</span>
+                        <input type="number" min="0" value="${this.state.formCorteManual.srp_entradas}" data-corte-field="srp_entradas" placeholder="0">
+                        
+                        <span class="badge badge-sr">SR</span>
+                        <input type="number" min="0" value="${this.state.formCorteManual.sr_entradas}" data-corte-field="sr_entradas" placeholder="0">
+                        
+                        <span class="badge badge-vph">VPH</span>
+                        <input type="number" min="0" value="${this.state.formCorteManual.vph_entradas}" data-corte-field="vph_entradas" placeholder="0">
+                    </div>
+                </div>
+
+                <!-- Sección 4: Fichas Disponibles -->
+                <div class="form-section">
+                    <h3>4. Fichas Disponibles (Finales)</h3>
+                    <div class="inventario-inputs-grid">
+                        <div class="grid-header"></div>
+                        <div class="grid-header">Calculado</div>
+
+                        <span class="badge badge-srp">SRP</span>
+                        <input type="number" min="0" value="${this.state.formCorteManual.srp_restantes}" data-corte-field="srp_restantes" readonly style="background: #f8f9fa; font-weight: bold;">
+                        
+                        <span class="badge badge-sr">SR</span>
+                        <input type="number" min="0" value="${this.state.formCorteManual.sr_restantes}" data-corte-field="sr_restantes" readonly style="background: #f8f9fa; font-weight: bold;">
+                        
+                        <span class="badge badge-vph">VPH</span>
+                        <input type="number" min="0" value="${this.state.formCorteManual.vph_restantes}" data-corte-field="vph_restantes" readonly style="background: #f8f9fa; font-weight: bold;">
+                    </div>
+                </div>
+
+                <style>
+                    .inventario-inputs-grid {
+                        display: grid;
+                        grid-template-columns: min-content 1fr;
+                        gap: 10px;
+                        align-items: center;
+                    }
+                    .grid-header {
+                        font-weight: bold;
+                        font-size: 0.9em;
+                        text-align: center;
+                        padding-bottom: 5px;
+                        color: #666;
+                    }
+                </style>
 
                 <!-- Seccion: Control de fichas -->
                 <div class="form-section">
@@ -1141,7 +1209,7 @@ class CoordinadorApp {
                 this.state.formCorteManual[input.dataset.corteField] = input.value;
 
                 // Recalcular fichas restantes en tiempo real
-                if (input.dataset.corteField === 'fichas_distribuidas' || input.dataset.corteField === 'fichas_entregadas') {
+                if (['fichas_distribuidas', 'fichas_entregadas'].includes(input.dataset.corteField)) {
                     const dist = parseInt(this.state.formCorteManual.fichas_distribuidas, 10) || 0;
                     const entr = parseInt(this.state.formCorteManual.fichas_entregadas, 10) || 0;
                     const rest = dist - entr;
@@ -1150,6 +1218,24 @@ class CoordinadorApp {
                         display.textContent = rest >= 0 ? rest : 0;
                         display.style.color = rest < 0 ? '#e74c3c' : '#27ae60';
                     }
+                }
+
+                // Recalcular balance de biológicos
+                const fields = ['srp', 'sr', 'vph'];
+                const suffix = input.dataset.corteField.split('_')[1]; // inicial, aplicadas, entradas
+                const bio = input.dataset.corteField.split('_')[0]; // srp, sr, vph
+
+                if (fields.includes(bio) && ['inicial', 'aplicadas', 'entradas'].includes(suffix)) {
+                    const inicial = parseInt(this.state.formCorteManual[`${bio}_inicial`], 10) || 0;
+                    const aplicadas = parseInt(this.state.formCorteManual[`${bio}_aplicadas`], 10) || 0;
+                    const entradas = parseInt(this.state.formCorteManual[`${bio}_entradas`], 10) || 0;
+
+                    const final = inicial + entradas - aplicadas;
+                    this.state.formCorteManual[`${bio}_restantes`] = final >= 0 ? final : 0;
+
+                    // Actualizar input visual de restantes (solo lectura)
+                    const resInput = document.querySelector(`input[data-corte-field="${bio}_restantes"]`);
+                    if (resInput) resInput.value = this.state.formCorteManual[`${bio}_restantes`];
                 }
             });
         });
