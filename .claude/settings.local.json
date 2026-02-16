@@ -24,7 +24,14 @@
       "Bash(node -c:*)",
       "Bash(jq:*)",
       "Bash(find:*)",
-      "Bash(git fetch:*)"
+      "Bash(git fetch:*)",
+      "Bash(git push:*)",
+      "Bash(gh repo create:*)",
+      "Bash(npx wrangler pages project:*)",
+      "Bash(ls:*)",
+      "Bash(npx wrangler pages deployment list:*)",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)"
     ]
   }
 }

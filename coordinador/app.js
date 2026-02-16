@@ -8,14 +8,13 @@ import { api } from '../shared/api.js';
 import { auth } from '../shared/auth.js';
 import { db } from '../shared/db.js';
 import { syncManager } from '../shared/sync.js';
-import { showToast, formatTime } from '../shared/utils.js';
+import { showToast, formatTime, copyToClipboard } from '../shared/utils.js';
 import { monitor } from '../shared/monitoring.js';
 
 class CoordinadorApp {
     constructor() {
 
         this.state = {
-            user: null,
             user: null,
             vistaActual: auth.isAuthenticated() ? 'monitor' : 'login', // Inicializar según auth
             turnoActivo: null,
@@ -35,6 +34,11 @@ class CoordinadorApp {
                 srp_restantes: 0,
                 sr_restantes: 0,
                 vph_restantes: 0,
+                srp_aplicadas: 0,
+                sr_aplicadas: 0,
+                vph_aplicadas: 0,
+                fichas_distribuidas: 0,
+                fichas_entregadas: 0,
                 notas: ''
             }
         };
@@ -128,8 +132,9 @@ class CoordinadorApp {
         try {
             if (!this.state.turnoActivo) return;
 
-            const fichas = await api.get(`/fichas/turno/${this.state.turnoActivo.id}`);
-            this.state.fichas = fichas || [];
+            // Backend retorna { success, fichas: [...], total, stats }
+            const response = await api.get(`/fichas/turno/${this.state.turnoActivo.id}`);
+            this.state.fichas = Array.isArray(response?.fichas) ? response.fichas : [];
 
         } catch (error) {
             console.error('Error cargando fichas:', error);
@@ -140,8 +145,9 @@ class CoordinadorApp {
     async cargarDispositivos() {
         try {
             const centroId = this.state.user.centroId;
-            const dispositivos = await api.get(`/dispositivos/${centroId}`);
-            this.state.dispositivos = dispositivos || [];
+            // Backend retorna { success, dispositivos: [...] }
+            const response = await api.get(`/dispositivos/${centroId}`);
+            this.state.dispositivos = Array.isArray(response?.dispositivos) ? response.dispositivos : [];
 
         } catch (error) {
             console.error('Error cargando dispositivos:', error);
@@ -153,8 +159,9 @@ class CoordinadorApp {
         try {
             if (!this.state.turnoActivo) return;
 
-            const bloques = await api.get(`/bloques/${this.state.turnoActivo.id}`);
-            this.state.bloques = bloques || [];
+            // Backend retorna { success, bloques: [...] }
+            const response = await api.get(`/bloques/${this.state.turnoActivo.id}`);
+            this.state.bloques = Array.isArray(response?.bloques) ? response.bloques : [];
 
         } catch (error) {
             console.error('Error cargando bloques:', error);
@@ -186,13 +193,14 @@ class CoordinadorApp {
                 vph_inicial: parseInt(form.vph_inicial, 10)
             };
 
-            const turno = await api.post('/turnos/abrir', data);
+            // Backend retorna { success, turno: { id, centro_id, ... } }
+            const response = await api.post('/turnos/abrir', data);
 
             showToast('Turno abierto exitosamente', 'success');
             monitor.trackEvent('Turno', 'Abierto', form.tipo);
 
-            // Actualizar estado
-            this.state.turnoActivo = turno;
+            // Asignar turno de la respuesta y recargar datos completos del turno
+            this.state.turnoActivo = response?.turno || response;
             this.cambiarVista('monitor');
             await this.cargarDatos();
             this.render();
@@ -218,21 +226,32 @@ class CoordinadorApp {
     async cerrarTurno() {
         try {
             // Confirmar
-            if (!confirm('¿Está seguro que desea cerrar el turno?')) {
+            if (!confirm('Confirme que desea cerrar el turno. Las fichas EMITIDAS pasaran a NO_UTILIZADA.')) {
                 return;
             }
 
-            const resultado = await api.post('/turnos/cerrar', {});
+            // Leer sobrantes del formulario
+            const sobrantes_srp = parseInt(document.getElementById('sobrantes-srp')?.value || '0', 10);
+            const sobrantes_sr = parseInt(document.getElementById('sobrantes-sr')?.value || '0', 10);
+            const sobrantes_vph = parseInt(document.getElementById('sobrantes-vph')?.value || '0', 10);
 
-            // Mostrar resumen
-            this.mostrarResumenCierre(resultado);
+            const resultado = await api.post('/turnos/cerrar', {
+                sobrantes_srp,
+                sobrantes_sr,
+                sobrantes_vph
+            });
+
+            // Mostrar resumen con los datos que devuelve el backend
+            this.mostrarResumenCierre(resultado?.resumen || resultado);
 
             showToast('Turno cerrado exitosamente', 'success');
-            monitor.trackEvent('Turno', 'Cerrado', resultado.tipo);
+            monitor.trackEvent('Turno', 'Cerrado', '');
 
             // Limpiar estado
             this.state.turnoActivo = null;
             this.state.fichas = [];
+            this.state.dispositivos = [];
+            this.state.bloques = [];
             this.cambiarVista('abrir');
             this.render();
 
@@ -270,12 +289,19 @@ class CoordinadorApp {
                     <p><strong>Fichas no utilizadas:</strong> ${resultado.no_utilizadas || 0}</p>
                 </div>
                 <div class="modal-buttons">
-                    <button class="btn btn-primary" onclick="this.closest('.modal-overlay').remove()">
+                    <button class="btn btn-primary" data-modal-action="close-summary">
                         Cerrar
                     </button>
                 </div>
             </div>
         `;
+
+        // Event listener para cerrar el modal
+        const btnClose = modal.querySelector('[data-modal-action="close-summary"]');
+        btnClose.addEventListener('click', () => {
+            modal.remove();
+        });
+
         document.body.appendChild(modal);
     }
 
@@ -289,15 +315,17 @@ class CoordinadorApp {
                 nombre: nombre
             };
 
-            const dispositivo = await api.post('/dispositivos/crear', data);
+            // Backend retorna { success, dispositivo: { ... } }
+            const response = await api.post('/dispositivos/crear', data);
+            const dispositivo = response?.dispositivo || response;
 
-            showToast(`Dispositivo ${rol} creado`, 'success');
-            monitor.trackEvent('Dispositivo', 'Creado', rol);
+            showToast(`Usuario ${rol} creado`, 'success');
+            monitor.trackEvent('Usuario', 'Creado', rol);
 
             await this.cargarDispositivos();
             this.render();
 
-            // Mostrar URL
+            // Mostrar URL del nuevo dispositivo
             this.mostrarURLDispositivo(dispositivo);
 
         } catch (error) {
@@ -307,27 +335,37 @@ class CoordinadorApp {
     }
 
     mostrarURLDispositivo(dispositivo) {
+        const fullUrl = new URL(dispositivo.url_generada, window.location.origin).href;
+
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
         modal.innerHTML = `
             <div class="modal-content">
-                <h3>Dispositivo Creado</h3>
+                <h3>Usuario Creado</h3>
                 <p><strong>Nombre:</strong> ${dispositivo.nombre}</p>
                 <p><strong>Rol:</strong> ${dispositivo.rol}</p>
-                <p><strong>URL:</strong></p>
+                <p><strong>Enlace de Acceso:</strong></p>
                 <div class="url-display">
-                    ${dispositivo.url_generada}
+                    ${fullUrl}
                 </div>
                 <div class="modal-buttons">
-                    <button class="btn btn-primary" onclick="navigator.clipboard.writeText('${dispositivo.url_generada}'); alert('URL copiada')">
-                        Copiar URL
+                    <button class="btn btn-primary" onclick="navigator.clipboard.writeText('${fullUrl}'); alert('Enlace copiado al portapapeles')">
+                        Copiar Enlace
                     </button>
-                    <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">
+                    <button class="btn btn-secondary" data-modal-action="close">
                         Cerrar
                     </button>
                 </div>
             </div>
         `;
+
+        // Event listeners para los botones del modal
+        const btnClose = modal.querySelector('[data-modal-action="close"]');
+
+        btnClose.addEventListener('click', () => {
+            modal.remove();
+        });
+
         document.body.appendChild(modal);
     }
 
@@ -367,7 +405,9 @@ class CoordinadorApp {
                 return;
             }
 
+            // turno_id es requerido por el backend para validar pertenencia
             const data = {
+                turno_id: this.state.turnoActivo.id,
                 dispositivo_token,
                 folio_inicio,
                 folio_fin
@@ -387,20 +427,36 @@ class CoordinadorApp {
 
     async enviarCorteManual() {
         try {
-            if (!this.state.turnoActivo) {
-                showToast('Debe haber un turno activo', 'error');
-                return;
-            }
-
             const form = this.state.formCorteManual;
 
+            // Calcular fichas restantes
+            const fichasDistribuidas = parseInt(form.fichas_distribuidas, 10) || 0;
+            const fichasEntregadas = parseInt(form.fichas_entregadas, 10) || 0;
+            const fichasRestantes = fichasDistribuidas - fichasEntregadas;
+
             const data = {
-                turno_id: this.state.turnoActivo.id,
-                srp_restantes: parseInt(form.srp_restantes, 10),
-                sr_restantes: parseInt(form.sr_restantes, 10),
-                vph_restantes: parseInt(form.vph_restantes, 10),
+                srp_restantes: parseInt(form.srp_restantes, 10) || 0,
+                sr_restantes: parseInt(form.sr_restantes, 10) || 0,
+                vph_restantes: parseInt(form.vph_restantes, 10) || 0,
+                fichas_distribuidas: fichasDistribuidas,
+                fichas_entregadas: fichasEntregadas,
+                fichas_restantes: fichasRestantes,
+                srp_aplicadas: parseInt(form.srp_aplicadas, 10) || 0,
+                sr_aplicadas: parseInt(form.sr_aplicadas, 10) || 0,
+                vph_aplicadas: parseInt(form.vph_aplicadas, 10) || 0,
+                srp_inicial: parseInt(form.srp_inicial, 10) || 0,
+                sr_inicial: parseInt(form.sr_inicial, 10) || 0,
+                vph_inicial: parseInt(form.vph_inicial, 10) || 0,
+                srp_entradas: parseInt(form.srp_entradas, 10) || 0,
+                sr_entradas: parseInt(form.sr_entradas, 10) || 0,
+                vph_entradas: parseInt(form.vph_entradas, 10) || 0,
                 notas: form.notas
             };
+
+            // Si hay turno activo, asociar el corte al turno
+            if (this.state.turnoActivo) {
+                data.turno_id = this.state.turnoActivo.id;
+            }
 
             await api.post('/cortes-manuales', data);
 
@@ -412,10 +468,17 @@ class CoordinadorApp {
                 srp_restantes: 0,
                 sr_restantes: 0,
                 vph_restantes: 0,
+                srp_aplicadas: 0,
+                sr_aplicadas: 0,
+                vph_aplicadas: 0,
+                fichas_distribuidas: 0,
+                fichas_entregadas: 0,
                 notas: ''
             };
 
-            await this.cargarTurnoActivo();
+            if (this.state.turnoActivo) {
+                await this.cargarTurnoActivo();
+            }
             this.render();
 
         } catch (error) {
@@ -534,7 +597,8 @@ class CoordinadorApp {
         } else {
             tabs.push(
                 { id: 'abrir', label: 'Abrir Turno' },
-                { id: 'dispositivos', label: 'Dispositivos' }
+                { id: 'dispositivos', label: 'Dispositivos' },
+                { id: 'cortes', label: 'Cortes' }
             );
         }
 
@@ -637,13 +701,13 @@ class CoordinadorApp {
                             class="tipo-turno-btn ${this.state.formAbrirTurno.tipo === 'MATUTINO' ? 'selected' : ''}"
                             data-tipo="MATUTINO"
                         >
-                            ☀ Matutino
+                            Matutino
                         </button>
                         <button
                             class="tipo-turno-btn ${this.state.formAbrirTurno.tipo === 'VESPERTINO' ? 'selected' : ''}"
                             data-tipo="VESPERTINO"
                         >
-                            🌙 Vespertino
+                            Vespertino
                         </button>
                     </div>
                 </div>
@@ -738,12 +802,16 @@ class CoordinadorApp {
 
         const semaforo = this.getSemaforo(biologico);
 
+        // Etiqueta correcta segun el tipo de biologico
+        const etiquetas = { srp: 'Triple Viral', sr: 'Doble Viral', vph: 'VPH' };
+        const etiqueta = etiquetas[biologico] || biologico.toUpperCase();
+
         return `
             <div class="progress-item">
                 <div class="progress-header">
                     <div class="label">
                         <span class="semaforo ${semaforo}"></span>
-                        ${label} (Triple Viral)
+                        ${label} (${etiqueta})
                     </div>
                     <div class="value">${disponible} / ${inicial}</div>
                 </div>
@@ -757,6 +825,11 @@ class CoordinadorApp {
     }
 
     renderVistaFichas() {
+        // Validación defensiva: asegurar que fichas es un array
+        if (!Array.isArray(this.state.fichas)) {
+            this.state.fichas = [];
+        }
+
         if (this.state.fichas.length === 0) {
             return `
                 <div class="empty-state">
@@ -785,10 +858,15 @@ class CoordinadorApp {
     }
 
     renderVistaDispositivos() {
+        // Validación defensiva: asegurar que dispositivos es un array
+        if (!Array.isArray(this.state.dispositivos)) {
+            this.state.dispositivos = [];
+        }
+
         return `
             <div class="dispositivos-panel">
                 <div class="dispositivos-header">
-                    <h2>Gestión de Dispositivos</h2>
+                    <h2>Alta/Baja de Usuarios</h2>
                     <div class="btn-crear-dispositivo">
                         <button class="btn btn-primary" data-action="crear-registrador">
                             + Registrador
@@ -814,15 +892,17 @@ class CoordinadorApp {
                             </tr>
                         </thead>
                         <tbody>
-                            ${this.state.dispositivos.map(d => `
+                            ${this.state.dispositivos.map(d => {
+            const fullUrl = new URL(d.url_generada, window.location.origin).href;
+            return `
                                 <tr>
                                     <td>${d.nombre}</td>
                                     <td>${d.rol}</td>
                                     <td>
-                                        <div class="url-display">${d.url_generada || 'N/A'}</div>
+                                        <div class="url-display" title="${fullUrl}">${fullUrl}</div>
                                     </td>
                                     <td>
-                                        <button class="btn-copiar" onclick="navigator.clipboard.writeText('${d.url_generada}'); alert('Copiado')">
+                                        <button class="btn-copiar" onclick="navigator.clipboard.writeText('${fullUrl}'); alert('Enlace copiado')">
                                             Copiar
                                         </button>
                                         <button class="btn-revocar" data-dispositivo-id="${d.id}">
@@ -830,7 +910,8 @@ class CoordinadorApp {
                                         </button>
                                     </td>
                                 </tr>
-                            `).join('')}
+                                `;
+        }).join('')}
                         </tbody>
                     </table>
                 `}
@@ -839,6 +920,11 @@ class CoordinadorApp {
     }
 
     renderVistaBloques() {
+        // Validación defensiva: asegurar que bloques es un array
+        if (!Array.isArray(this.state.bloques)) {
+            this.state.bloques = [];
+        }
+
         return `
             <div class="bloques-panel">
                 <h2>Distribución de Bloques de Folios</h2>
@@ -869,59 +955,150 @@ class CoordinadorApp {
     }
 
     renderVistaCortes() {
+        // Calculo automatico de fichas restantes
+        const fichasDist = parseInt(this.state.formCorteManual.fichas_distribuidas, 10) || 0;
+        const fichasEntr = parseInt(this.state.formCorteManual.fichas_entregadas, 10) || 0;
+        const fichasRest = fichasDist - fichasEntr;
+
         return `
             <div class="corte-manual-form">
                 <h2>Corte Informativo Manual</h2>
 
                 <div class="alert-info">
                     <p>
-                        <strong>Uso:</strong> Solo cuando los dispositivos no tienen conexión a internet.
-                        Permite actualizar el panel público con las dosis restantes.
+                        <strong>Uso:</strong> Reportar existencias de biologico y fichas.
+                        ${this.state.turnoActivo ? '' : '<br><em>Sin turno activo: el corte se registra sin asociar a un turno.</em>'}
                     </p>
                 </div>
 
+                <!-- Sección 1: Inventario Inicial -->
                 <div class="form-section">
+                    <h3>1. Inventario Inicial</h3>
+                    <div class="inventario-inputs-grid">
+                        <div class="grid-header"></div>
+                        <div class="grid-header">Cantidad</div>
+                        
+                        <span class="badge badge-srp">SRP</span>
+                        <input type="number" min="0" value="${this.state.formCorteManual.srp_inicial}" data-corte-field="srp_inicial" placeholder="0">
+                        
+                        <span class="badge badge-sr">SR</span>
+                        <input type="number" min="0" value="${this.state.formCorteManual.sr_inicial}" data-corte-field="sr_inicial" placeholder="0">
+                        
+                        <span class="badge badge-vph">VPH</span>
+                        <input type="number" min="0" value="${this.state.formCorteManual.vph_inicial}" data-corte-field="vph_inicial" placeholder="0">
+                    </div>
+                </div>
+
+                <!-- Sección 2: Dosis Aplicadas -->
+                <div class="form-section">
+                    <h3>2. Dosis Aplicadas (Extra-sistema)</h3>
+                    <div class="inventario-inputs-grid">
+                        <div class="grid-header"></div>
+                        <div class="grid-header">Cantidad</div>
+
+                        <span class="badge badge-srp">SRP</span>
+                        <input type="number" min="0" value="${this.state.formCorteManual.srp_aplicadas}" data-corte-field="srp_aplicadas" placeholder="0">
+                        
+                        <span class="badge badge-sr">SR</span>
+                        <input type="number" min="0" value="${this.state.formCorteManual.sr_aplicadas}" data-corte-field="sr_aplicadas" placeholder="0">
+                        
+                        <span class="badge badge-vph">VPH</span>
+                        <input type="number" min="0" value="${this.state.formCorteManual.vph_aplicadas}" data-corte-field="vph_aplicadas" placeholder="0">
+                    </div>
+                </div>
+
+                <!-- Sección 3: Alta de Biológico -->
+                <div class="form-section">
+                    <h3>3. Alta de Biológico (Entradas)</h3>
+                    <div class="inventario-inputs-grid">
+                        <div class="grid-header"></div>
+                        <div class="grid-header">Cantidad</div>
+
+                        <span class="badge badge-srp">SRP</span>
+                        <input type="number" min="0" value="${this.state.formCorteManual.srp_entradas}" data-corte-field="srp_entradas" placeholder="0">
+                        
+                        <span class="badge badge-sr">SR</span>
+                        <input type="number" min="0" value="${this.state.formCorteManual.sr_entradas}" data-corte-field="sr_entradas" placeholder="0">
+                        
+                        <span class="badge badge-vph">VPH</span>
+                        <input type="number" min="0" value="${this.state.formCorteManual.vph_entradas}" data-corte-field="vph_entradas" placeholder="0">
+                    </div>
+                </div>
+
+                <!-- Sección 4: Fichas Disponibles -->
+                <div class="form-section">
+                    <h3>4. Fichas Disponibles (Finales)</h3>
+                    <div class="inventario-inputs-grid">
+                        <div class="grid-header"></div>
+                        <div class="grid-header">Calculado</div>
+
+                        <span class="badge badge-srp">SRP</span>
+                        <input type="number" min="0" value="${this.state.formCorteManual.srp_restantes}" data-corte-field="srp_restantes" readonly style="background: #f8f9fa; font-weight: bold;">
+                        
+                        <span class="badge badge-sr">SR</span>
+                        <input type="number" min="0" value="${this.state.formCorteManual.sr_restantes}" data-corte-field="sr_restantes" readonly style="background: #f8f9fa; font-weight: bold;">
+                        
+                        <span class="badge badge-vph">VPH</span>
+                        <input type="number" min="0" value="${this.state.formCorteManual.vph_restantes}" data-corte-field="vph_restantes" readonly style="background: #f8f9fa; font-weight: bold;">
+                    </div>
+                </div>
+
+                <style>
+                    .inventario-inputs-grid {
+                        display: grid;
+                        grid-template-columns: min-content 1fr;
+                        gap: 10px;
+                        align-items: center;
+                    }
+                    .grid-header {
+                        font-weight: bold;
+                        font-size: 0.9em;
+                        text-align: center;
+                        padding-bottom: 5px;
+                        color: #666;
+                    }
+                </style>
+
+                <!-- Seccion: Control de fichas -->
+                <div class="form-section">
+                    <h3>Control de Fichas</h3>
                     <div class="inventario-inputs">
                         <div class="inventario-input-group">
-                            <span class="badge badge-srp">SRP</span>
-                            <label>Restantes:</label>
+                            <label>Fichas Distribuidas:</label>
                             <input
                                 type="number"
                                 min="0"
-                                value="${this.state.formCorteManual.srp_restantes}"
-                                data-corte-field="srp_restantes"
+                                value="${this.state.formCorteManual.fichas_distribuidas}"
+                                data-corte-field="fichas_distribuidas"
+                                id="fichas-distribuidas"
                             />
                         </div>
                         <div class="inventario-input-group">
-                            <span class="badge badge-sr">SR</span>
-                            <label>Restantes:</label>
+                            <label>Fichas Entregadas:</label>
                             <input
                                 type="number"
                                 min="0"
-                                value="${this.state.formCorteManual.sr_restantes}"
-                                data-corte-field="sr_restantes"
+                                value="${this.state.formCorteManual.fichas_entregadas}"
+                                data-corte-field="fichas_entregadas"
+                                id="fichas-entregadas"
                             />
                         </div>
-                        <div class="inventario-input-group">
-                            <span class="badge badge-vph">VPH</span>
-                            <label>Restantes:</label>
-                            <input
-                                type="number"
-                                min="0"
-                                value="${this.state.formCorteManual.vph_restantes}"
-                                data-corte-field="vph_restantes"
-                            />
+                        <div class="inventario-input-group fichas-restantes">
+                            <label>Fichas Restantes:</label>
+                            <span class="fichas-restantes-value" id="fichas-restantes-display">
+                                ${fichasRest >= 0 ? fichasRest : 0}
+                            </span>
                         </div>
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <label>Notas (opcional):</label>
-                        <textarea
-                            rows="3"
-                            placeholder="Observaciones adicionales..."
-                            data-corte-field="notas"
-                        >${this.state.formCorteManual.notas}</textarea>
-                    </div>
+                <div class="form-group">
+                    <label>Notas (opcional):</label>
+                    <textarea
+                        rows="3"
+                        placeholder="Observaciones adicionales..."
+                        data-corte-field="notas"
+                    >${this.state.formCorteManual.notas}</textarea>
                 </div>
 
                 <button class="btn btn-primary" data-action="enviar-corte">
@@ -936,7 +1113,13 @@ class CoordinadorApp {
             return '<div class="empty-state"><p>No hay turno activo</p></div>';
         }
 
+        // Validación defensiva: asegurar que fichas es un array
+        if (!Array.isArray(this.state.fichas)) {
+            this.state.fichas = [];
+        }
+
         const turno = this.state.turnoActivo;
+        // Contar fichas emitidas pendientes de aplicar
         const fichasEmitidas = this.state.fichas.filter(f => f.estado === 'EMITIDA').length;
 
         return `
@@ -945,10 +1128,10 @@ class CoordinadorApp {
 
                 <div class="alert-info">
                     ${fichasEmitidas > 0 ? `
-                        <p><strong>⚠ Atención:</strong> Hay ${fichasEmitidas} fichas EMITIDAS pendientes de aplicar.</p>
-                        <p>Si cierra el turno, estas fichas pasarán a estado NO_UTILIZADA.</p>
+                        <p><strong>Atencion:</strong> Hay ${fichasEmitidas} fichas EMITIDAS pendientes de aplicar.</p>
+                        <p>Si cierra el turno, estas fichas pasaran a estado NO_UTILIZADA.</p>
                     ` : `
-                        <p>✓ Todas las fichas emitidas han sido procesadas.</p>
+                        <p>Todas las fichas emitidas han sido procesadas.</p>
                     `}
                 </div>
 
@@ -962,6 +1145,28 @@ class CoordinadorApp {
                     <p><strong>SRP Aplicadas:</strong> ${turno.srp_aplicadas}</p>
                     <p><strong>SR Aplicadas:</strong> ${turno.sr_aplicadas}</p>
                     <p><strong>VPH Aplicadas:</strong> ${turno.vph_aplicadas}</p>
+                </div>
+
+                <div class="form-section">
+                    <h3>Reporte de Sobrantes</h3>
+                    <p class="subtext">Ingrese las dosis fisicas sobrantes para verificacion de inventario.</p>
+                    <div class="inventario-inputs">
+                        <div class="inventario-input-group">
+                            <span class="badge badge-srp">SRP</span>
+                            <label>Sobrantes:</label>
+                            <input type="number" min="0" value="0" id="sobrantes-srp" />
+                        </div>
+                        <div class="inventario-input-group">
+                            <span class="badge badge-sr">SR</span>
+                            <label>Sobrantes:</label>
+                            <input type="number" min="0" value="0" id="sobrantes-sr" />
+                        </div>
+                        <div class="inventario-input-group">
+                            <span class="badge badge-vph">VPH</span>
+                            <label>Sobrantes:</label>
+                            <input type="number" min="0" value="0" id="sobrantes-vph" />
+                        </div>
+                    </div>
                 </div>
 
                 <button class="btn btn-danger btn-large" data-action="cerrar-turno">
@@ -997,11 +1202,41 @@ class CoordinadorApp {
             });
         });
 
-        // Inputs corte manual
+        // Inputs corte manual con calculo automatico de fichas
         const corteInputs = document.querySelectorAll('[data-corte-field]');
         corteInputs.forEach(input => {
-            input.addEventListener('change', () => {
+            input.addEventListener('input', () => {
                 this.state.formCorteManual[input.dataset.corteField] = input.value;
+
+                // Recalcular fichas restantes en tiempo real
+                if (['fichas_distribuidas', 'fichas_entregadas'].includes(input.dataset.corteField)) {
+                    const dist = parseInt(this.state.formCorteManual.fichas_distribuidas, 10) || 0;
+                    const entr = parseInt(this.state.formCorteManual.fichas_entregadas, 10) || 0;
+                    const rest = dist - entr;
+                    const display = document.getElementById('fichas-restantes-display');
+                    if (display) {
+                        display.textContent = rest >= 0 ? rest : 0;
+                        display.style.color = rest < 0 ? '#e74c3c' : '#27ae60';
+                    }
+                }
+
+                // Recalcular balance de biológicos
+                const fields = ['srp', 'sr', 'vph'];
+                const suffix = input.dataset.corteField.split('_')[1]; // inicial, aplicadas, entradas
+                const bio = input.dataset.corteField.split('_')[0]; // srp, sr, vph
+
+                if (fields.includes(bio) && ['inicial', 'aplicadas', 'entradas'].includes(suffix)) {
+                    const inicial = parseInt(this.state.formCorteManual[`${bio}_inicial`], 10) || 0;
+                    const aplicadas = parseInt(this.state.formCorteManual[`${bio}_aplicadas`], 10) || 0;
+                    const entradas = parseInt(this.state.formCorteManual[`${bio}_entradas`], 10) || 0;
+
+                    const final = inicial + entradas - aplicadas;
+                    this.state.formCorteManual[`${bio}_restantes`] = final >= 0 ? final : 0;
+
+                    // Actualizar input visual de restantes (solo lectura)
+                    const resInput = document.querySelector(`input[data-corte-field="${bio}_restantes"]`);
+                    if (resInput) resInput.value = this.state.formCorteManual[`${bio}_restantes`];
+                }
             });
         });
 
@@ -1027,6 +1262,20 @@ class CoordinadorApp {
         if (btnCrearAplic) {
             btnCrearAplic.addEventListener('click', () => this.crearDispositivo('APLICADOR'));
         }
+
+        // Botones copiar URL
+        const btnCopiar = document.querySelectorAll('.btn-copiar[data-url]');
+        btnCopiar.forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const url = btn.dataset.url;
+                const success = await copyToClipboard(url);
+                if (success) {
+                    showToast('URL copiada al portapapeles', 'success');
+                } else {
+                    showToast('No se pudo copiar. Copia manualmente la URL', 'error');
+                }
+            });
+        });
 
         // Botones revocar dispositivo
         const btnRevocar = document.querySelectorAll('[data-dispositivo-id]');

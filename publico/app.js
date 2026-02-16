@@ -218,6 +218,32 @@ class PanelPublico {
         ).join('');
     }
 
+    formatHoraDurango(fechaInput) {
+        if (!fechaInput) return '';
+
+        // Si es string de SQLite (YYYY-MM-DD HH:MM:SS), asumir UTC
+        let fecha;
+        if (typeof fechaInput === 'string') {
+            let iso = fechaInput.replace(' ', 'T');
+            if (!iso.endsWith('Z')) iso += 'Z';
+            fecha = new Date(iso);
+        } else {
+            fecha = fechaInput;
+        }
+
+        try {
+            return fecha.toLocaleTimeString('es-MX', {
+                timeZone: 'America/Mexico_City',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+        } catch (e) {
+            console.error('Error formato fecha:', e);
+            return fecha.toLocaleTimeString('es-MX');
+        }
+    }
+
     renderCentroCard(centro) {
         const estadoTexto = {
             'DISPONIBLE': '✅ Disponible',
@@ -255,10 +281,7 @@ class PanelPublico {
         let infoAdicional = '';
         if (centro.turno_abierto) {
             const tipoTurno = centro.turno_tipo === 'MATUTINO' ? '☀️ Matutino' : '🌙 Vespertino';
-            const horaApertura = new Date(centro.ts_apertura).toLocaleTimeString('es-MX', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+            const horaApertura = this.formatHoraDurango(centro.ts_apertura);
             infoAdicional = `
                 <div class="centro-info">
                     ${tipoTurno} • Abierto desde ${horaApertura}
@@ -300,7 +323,7 @@ class PanelPublico {
             texto = `Actualizado hace ${minutos} minuto${minutos !== 1 ? 's' : ''}`;
         }
 
-        elem.textContent = `📡 ${texto} • ${this.state.ultimaActualizacion.toLocaleTimeString('es-MX')}`;
+        elem.textContent = `📡 ${texto} • ${this.formatHoraDurango(this.state.ultimaActualizacion)}`;
     }
 
     iniciarAutoRefresh() {
