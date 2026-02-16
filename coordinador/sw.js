@@ -3,7 +3,7 @@
  * FASE 6 - TURNO-PVU
  */
 
-const CACHE_NAME = 'turno-pvu-coordinador-v4-crossbrowser';
+const CACHE_NAME = 'turno-pvu-coordinador-v5-force-reload';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
