@@ -3,7 +3,7 @@
  * FASE 6 - TURNO-PVU
  */
 
-const CACHE_NAME = 'turno-pvu-coordinador-v2';
+const CACHE_NAME = 'turno-pvu-coordinador-v3';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -22,7 +22,7 @@ const ASSETS_TO_CACHE = [
 
 // Instalación
 self.addEventListener('install', (event) => {
-    console.log('[SW] Instalando Service Worker - Módulo Coordinador');
+    console.log('[SW] Instalando Service Worker - Módulo Coordinador v3');
 
     event.waitUntil(
         caches.open(CACHE_NAME)
@@ -36,7 +36,7 @@ self.addEventListener('install', (event) => {
 
 // Activación
 self.addEventListener('activate', (event) => {
-    console.log('[SW] Activando Service Worker');
+    console.log('[SW] Activando Service Worker v3');
 
     event.waitUntil(
         caches.keys()
@@ -59,7 +59,12 @@ self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);
 
-    // API requests: Network First
+    // Ignorar requests no-http (ej: chrome-extension://)
+    if (!url.protocol.startsWith('http')) {
+        return;
+    }
+
+    // API requests: Network First (siempre)
     if (url.pathname.includes('/api/')) {
         event.respondWith(
             fetch(request)
@@ -77,7 +82,36 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Assets: Cache First
+    // Assets criticos (HTML, JS, CSS): Network First -> Falling back to Cache
+    // Esto asegura que siempre busquemos la version mas nueva
+    if (request.mode === 'navigate' ||
+        request.destination === 'script' ||
+        request.destination === 'style' ||
+        request.url.includes('.js') ||
+        request.url.includes('.css')) {
+
+        event.respondWith(
+            fetch(request)
+                .then((networkResponse) => {
+                    // Si la red responde bien, actualizamos cache
+                    if (networkResponse && networkResponse.status === 200) {
+                        const responseClone = networkResponse.clone();
+                        caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(request, responseClone);
+                        });
+                    }
+                    return networkResponse;
+                })
+                .catch(() => {
+                    // Si falla la red, usamos cache
+                    console.log('[SW] Network failed, serving from cache:', request.url);
+                    return caches.match(request);
+                })
+        );
+        return;
+    }
+
+    // Imagenes/Fuentes/Otros: Cache First
     event.respondWith(
         caches.match(request)
             .then((cachedResponse) => {
