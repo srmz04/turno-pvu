@@ -337,12 +337,12 @@ class CoordinadorApp {
                 <h3>Dispositivo Creado</h3>
                 <p><strong>Nombre:</strong> ${dispositivo.nombre}</p>
                 <p><strong>Rol:</strong> ${dispositivo.rol}</p>
-                <p><strong>URL:</strong></p>
+                <p><strong>URL de Acceso:</strong></p>
                 <div class="url-display">
-                    ${dispositivo.url_generada}
+                    ${window.location.origin}${dispositivo.url_generada}
                 </div>
                 <div class="modal-buttons">
-                    <button class="btn btn-primary" data-modal-action="copy-url">
+                    <button class="btn btn-primary" onclick="navigator.clipboard.writeText('${window.location.origin}${dispositivo.url_generada}'); alert('URL copiada al portapapeles')">
                         Copiar URL
                     </button>
                     <button class="btn btn-secondary" data-modal-action="close">
@@ -353,17 +353,18 @@ class CoordinadorApp {
         `;
 
         // Event listeners para los botones del modal
-        const btnCopy = modal.querySelector('[data-modal-action="copy-url"]');
+        // The user's instruction replaces the original event listener with an inline onclick.
+        // const btnCopy = modal.querySelector('[data-modal-action="copy-url"]');
         const btnClose = modal.querySelector('[data-modal-action="close"]');
 
-        btnCopy.addEventListener('click', async () => {
-            const success = await copyToClipboard(dispositivo.url_generada);
-            if (success) {
-                showToast('URL copiada al portapapeles', 'success');
-            } else {
-                showToast('No se pudo copiar. Copia manualmente la URL', 'error');
-            }
-        });
+        // btnCopy.addEventListener('click', async () => {
+        //     const success = await copyToClipboard(dispositivo.url_generada);
+        //     if (success) {
+        //         showToast('URL copiada al portapapeles', 'success');
+        //     } else {
+        //         showToast('No se pudo copiar. Copia manualmente la URL', 'error');
+        //     }
+        // });
 
         btnClose.addEventListener('click', () => {
             modal.remove();
@@ -845,7 +846,7 @@ class CoordinadorApp {
         return `
             <div class="dispositivos-panel">
                 <div class="dispositivos-header">
-                    <h2>Gestión de Dispositivos</h2>
+                    <h2>Alta/Baja de Usuarios</h2>
                     <div class="btn-crear-dispositivo">
                         <button class="btn btn-primary" data-action="crear-registrador">
                             + Registrador
@@ -858,7 +859,7 @@ class CoordinadorApp {
 
                 ${this.state.dispositivos.length === 0 ? `
                     <div class="empty-state">
-                        <p>No hay dispositivos registrados</p>
+                        <p>No hay usuarios registrados</p>
                     </div>
                 ` : `
                     <table class="dispositivos-table">
@@ -866,20 +867,22 @@ class CoordinadorApp {
                             <tr>
                                 <th>Nombre</th>
                                 <th>Rol</th>
-                                <th>URL</th>
+                                <th>URL de Acceso</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${this.state.dispositivos.map(d => `
+                            ${this.state.dispositivos.map(d => {
+            const fullUrl = window.location.origin + (d.url_generada || '');
+            return `
                                 <tr>
                                     <td>${d.nombre}</td>
                                     <td>${d.rol}</td>
                                     <td>
-                                        <div class="url-display">${d.url_generada || 'N/A'}</div>
+                                        <div class="url-display">${fullUrl}</div>
                                     </td>
                                     <td>
-                                        <button class="btn-copiar" data-url="${d.url_generada}">
+                                        <button class="btn-copiar" onclick="navigator.clipboard.writeText('${fullUrl}'); alert('URL copiada al portapapeles')">
                                             Copiar
                                         </button>
                                         <button class="btn-revocar" data-dispositivo-id="${d.id}">
@@ -887,7 +890,8 @@ class CoordinadorApp {
                                         </button>
                                     </td>
                                 </tr>
-                            `).join('')}
+                                `;
+        }).join('')}
                         </tbody>
                     </table>
                 `}
