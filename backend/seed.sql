@@ -1,133 +1,54 @@
--- TURNO-PVU Seed Data
--- Datos iniciales para desarrollo y pruebas
--- Fecha: 14 febrero 2026
+-- Seed updated automatically based on Excel
+PRAGMA foreign_keys = OFF;
 
--- ============================================================================
--- 1. CENTROS DE SALUD REALES DE DURANGO
--- ============================================================================
+DELETE FROM alertas;
+DELETE FROM rechazos;
+DELETE FROM fichas;
+DELETE FROM transferencias_inventario;
+DELETE FROM bloques_folios;
+DELETE FROM cortes_manuales;
+DELETE FROM turnos;
+DELETE FROM dispositivos;
+DELETE FROM lotes_biologicos;
+DELETE FROM metricas_operativas;
+DELETE FROM usuarios WHERE rol IN ('COORDINADOR', 'REGISTRADOR', 'APLICADOR');
+DELETE FROM centros;
 
-INSERT INTO centros (codigo, nombre, municipio, latitud, longitud, capacidad_max_dia) VALUES
-('CS001', 'Centro de Salud Durango Centro', 'Durango', 24.0277, -104.6532, 250),
-('CS002', 'Centro de Salud Mezquital', 'Mezquital', 23.5197, -104.3778, 150),
-('CS003', 'Centro de Salud Gómez Palacio', 'Gómez Palacio', 25.5697, -103.5000, 300),
-('CS004', 'Centro de Salud Vicente Guerrero', 'Vicente Guerrero', 23.7333, -103.9833, 120),
-('CS005', 'Centro de Salud Santiago Papasquiaro', 'Santiago Papasquiaro', 25.0453, -105.4197, 180),
-('CS006', 'Centro de Salud El Salto', 'Pueblo Nuevo', 23.7833, -105.3667, 140),
-('CS007', 'Centro de Salud Nombre de Dios', 'Nombre de Dios', 23.8433, -104.2164, 110),
-('CS008', 'Centro de Salud Guadalupe Victoria', 'Guadalupe Victoria', 24.4667, -104.1167, 130),
-('CS009', 'Centro de Salud Lerdo', 'Lerdo', 25.5333, -103.5333, 200),
-('CS010', 'Centro de Salud Canatlán', 'Canatlán', 24.5217, -104.7789, 100),
-('CS011', 'Centro de Salud Súchil', 'Súchil', 25.2000, -105.8667, 90),
-('CS012', 'Centro de Salud Tepehuanes', 'Tepehuanes', 25.8667, -105.7333, 110),
-('CS013', 'Centro de Salud Cuencamé', 'Cuencamé', 24.8667, -103.7000, 95),
-('CS014', 'Centro de Salud Mapimí', 'Mapimí', 25.8333, -103.8500, 85),
-('CS015', 'Centro de Salud Peñón Blanco', 'Peñón Blanco', 24.7833, -104.4333, 80);
+DELETE FROM sqlite_sequence WHERE name IN ('centros', 'usuarios');
 
--- ============================================================================
--- 2. CONFIGURACIÓN DEL SISTEMA
--- ============================================================================
+-- Centro: CESSA 450
+INSERT INTO centros (id, nombre, codigo, municipio, activo) VALUES (1, 'CESSA 450', 'CESSA450', 'DURANGO', 1);
+INSERT INTO usuarios (id, username, password_hash, salt, rol, nombre_completo, centro_id) VALUES (100, 'cessa450', '3FaGx2G/bYYvz5Zq7llPM6Ya+7U1CWGHS29Yy1iply0=', 'Om+4VAVrxz4RuZlp+o92gQ==', 'COORDINADOR', 'Coord CESSA 450', 1);
+INSERT INTO usuarios (id, username, password_hash, salt, rol, nombre_completo, centro_id) VALUES (101, 'reg.cessa450', 'aU2+ytDAOnz7PZg91xrzqCFwUiafuKXTu2igQyG6aPw=', '2r7pFzko7pS4fK5vsdMBJQ==', 'REGISTRADOR', 'Reg CESSA 450', 1);
+INSERT INTO usuarios (id, username, password_hash, salt, rol, nombre_completo, centro_id) VALUES (102, 'app.cessa450', 'P/bqw/e9BaF4XUjX0JbPDQps7sj1pCJt+2fD5gTTk3s=', 'X0qCgbyzDnk8VvcWCdJWLA==', 'APLICADOR', 'App CESSA 450', 1);
 
-INSERT INTO configuracion (clave, valor, descripcion, tipo) VALUES
-('rate_limit_requests_per_min', '100', 'Límite de requests por minuto por IP/usuario', 'NUMBER'),
-('alerta_inventario_bajo_pct', '20', 'Porcentaje de inventario para alerta MEDIA', 'NUMBER'),
-('alerta_inventario_critico_pct', '10', 'Porcentaje de inventario para alerta ALTA', 'NUMBER'),
-('backup_interval_hours', '6', 'Intervalo de backup automático en horas', 'NUMBER'),
-('jwt_expiration_hours', '8', 'Duración del JWT en horas', 'NUMBER'),
-('max_login_attempts', '5', 'Intentos fallidos antes de bloquear cuenta', 'NUMBER'),
-('edad_min_meses', '6', 'Edad mínima en meses para vacunación', 'NUMBER'),
-('edad_max_anios', '12', 'Edad máxima en años para vacunación', 'NUMBER'),
-('edad_sr_desde_anios', '11', 'Edad desde la cual se usa SR en lugar de SRP', 'NUMBER'),
-('vph_mujeres_edad_min', '11', 'Edad mínima mujeres para VPH', 'NUMBER'),
-('vph_mujeres_edad_max', '12', 'Edad máxima mujeres para VPH', 'NUMBER'),
-('vph_hombres_edad_min', '11', 'Edad mínima hombres para VPH', 'NUMBER'),
-('vph_hombres_edad_max', '11', 'Edad máxima hombres para VPH', 'NUMBER');
+-- Centro: CESSA DR. CARLOS STA. MARÍA
+INSERT INTO centros (id, nombre, codigo, municipio, activo) VALUES (2, 'CESSA DR. CARLOS STA. MARÍA', 'CENTRO2', 'DURANGO', 1);
+INSERT INTO usuarios (id, username, password_hash, salt, rol, nombre_completo, centro_id) VALUES (103, 'centro2', '9hfen8gEe1UIHaMj3I+ogDoCGbZD4J/W/2ckt83gmE0=', 'YbUvg2hpx1dMBsskEX6YqQ==', 'COORDINADOR', 'Coord CESSA DR. CARLOS STA. MARÍA', 2);
+INSERT INTO usuarios (id, username, password_hash, salt, rol, nombre_completo, centro_id) VALUES (104, 'reg.centro2', 'Or8yJZycQ7aEKSJKpcsldsXxao8GT3+ebL0WVdHb32Q=', 'KRrZIEopdMmcFieZHKVYbw==', 'REGISTRADOR', 'Reg CESSA DR. CARLOS STA. MARÍA', 2);
+INSERT INTO usuarios (id, username, password_hash, salt, rol, nombre_completo, centro_id) VALUES (105, 'app.centro2', 'lFrzs0gFL2LDjfSwdjkCnbvf3z5Hxn0vAbsDt+xbgjA=', 'fYXN/oHPS1hGcYR/2wDW4w==', 'APLICADOR', 'App CESSA DR. CARLOS STA. MARÍA', 2);
 
--- ============================================================================
--- 3. USUARIO ADMINISTRADOR
--- ============================================================================
+-- Centro: CESSA DR. CARLOS LEÓN DE LA PEÑA
+INSERT INTO centros (id, nombre, codigo, municipio, activo) VALUES (3, 'CESSA DR. CARLOS LEÓN DE LA PEÑA', 'CESSA1', 'DURANGO', 1);
+INSERT INTO usuarios (id, username, password_hash, salt, rol, nombre_completo, centro_id) VALUES (106, 'cessa1', 'o3xJz58PDNceid4xtAG6Fnv7TAwdy7UKcc+RnaEZG04=', 'Et2MsNnQYYqYDRN0Xhbekw==', 'COORDINADOR', 'Coord CESSA DR. CARLOS LEÓN DE LA PEÑA', 3);
+INSERT INTO usuarios (id, username, password_hash, salt, rol, nombre_completo, centro_id) VALUES (107, 'reg.cessa1', 'F6CfBg1HdSZvWe+i2UcHBOT/jhRJcTTzU3yBVXKOlS4=', 'Ljn8+/Q7kCPcJfjs5PQCgA==', 'REGISTRADOR', 'Reg CESSA DR. CARLOS LEÓN DE LA PEÑA', 3);
+INSERT INTO usuarios (id, username, password_hash, salt, rol, nombre_completo, centro_id) VALUES (108, 'app.cessa1', 'QzBrkkfQm9hj0gFiEtoeIcwSwolW4CS2USO6coRYAIM=', 'fDq7duDnM49eVLHL/cBs6Q==', 'APLICADOR', 'App CESSA DR. CARLOS LEÓN DE LA PEÑA', 3);
 
--- Password: Admin123!
--- Salt: generado con crypto.getRandomValues (ejemplo)
--- Hash: PBKDF2 con 100000 iterations (este es un ejemplo, en producción se genera con Web Crypto API)
+-- Centro: HOSPITAL GENERAL DE DURANGO
+INSERT INTO centros (id, nombre, codigo, municipio, activo) VALUES (4, 'HOSPITAL GENERAL DE DURANGO', 'MATERNO', 'DURANGO', 1);
+INSERT INTO usuarios (id, username, password_hash, salt, rol, nombre_completo, centro_id) VALUES (109, 'materno', 'YkpL7J+/am7Rp8teyed2MtpLglJri3lyyikD+0Jmwzk=', 'iD9RHFTzgA0X/39BRk6SkQ==', 'COORDINADOR', 'Coord HOSPITAL GENERAL DE DURANGO', 4);
+INSERT INTO usuarios (id, username, password_hash, salt, rol, nombre_completo, centro_id) VALUES (110, 'reg.materno', 'mk6qtImze4C9sBzwwSzmDcxuQtUWslgC/6fFhxHp9yM=', 'JvVfUb4Jm8kpX6mPydVr6w==', 'REGISTRADOR', 'Reg HOSPITAL GENERAL DE DURANGO', 4);
+INSERT INTO usuarios (id, username, password_hash, salt, rol, nombre_completo, centro_id) VALUES (111, 'app.materno', 'gplQMTkbbNPeO02jpP+Ehg0LvUrPREUv0Sjj9YMEGyE=', 'ywSEpNWre3NeL77qLOd8OA==', 'APLICADOR', 'App HOSPITAL GENERAL DE DURANGO', 4);
 
-INSERT INTO usuarios (username, password_hash, salt, nombre_completo, centro_id, rol, activo) VALUES
-('admin', 
- 'TxZeeEH3og+B8KBHe5AVpNDuglXiqCv9ezMhcuCGfUg=',  -- Admin123!
- 'udk4wSTmYnq+Z5KiqKPDdQ==',          -- Salt
- 'Administrador General del Sistema',
- NULL,
- 'ADMIN',
- 1);
+-- Centro: C.S.U. DR. ISAURO VENZOR
+INSERT INTO centros (id, nombre, codigo, municipio, activo) VALUES (5, 'C.S.U. DR. ISAURO VENZOR', 'ISAURO', 'GÓMEZ PALACIO', 1);
+INSERT INTO usuarios (id, username, password_hash, salt, rol, nombre_completo, centro_id) VALUES (112, 'isauro', 'YAKfWP52Q0jj0OsrST/XxY9bMWw8PnBFKnX9XaiECVc=', '6YfY83+1AdM1VNRbmykafw==', 'COORDINADOR', 'Coord C.S.U. DR. ISAURO VENZOR', 5);
+INSERT INTO usuarios (id, username, password_hash, salt, rol, nombre_completo, centro_id) VALUES (113, 'reg.isauro', '/ddOkwKhfkOs/F2oYF18WAmXBtDtAOS8v1bI4WQJ+mw=', 'AFXBKwsU9ZK9srJLpI8sAQ==', 'REGISTRADOR', 'Reg C.S.U. DR. ISAURO VENZOR', 5);
+INSERT INTO usuarios (id, username, password_hash, salt, rol, nombre_completo, centro_id) VALUES (114, 'app.isauro', 'PUO97mXZ2JMqU/Fk26owsswHJlyYYxlQSWOJMS6D6ug=', 'UMJ5N26WTCMT8iurj3fIEg==', 'APLICADOR', 'App C.S.U. DR. ISAURO VENZOR', 5);
 
--- ============================================================================
--- 4. COORDINADORES (uno por centro)
--- ============================================================================
-
-INSERT INTO usuarios (username, password_hash, salt, nombre_completo, centro_id, rol, activo) VALUES
-('coord.cs001', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Durango Centro', 1, 'COORDINADOR', 1),
-('coord.cs002', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Mezquital', 2, 'COORDINADOR', 1),
-('coord.cs003', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Gómez Palacio', 3, 'COORDINADOR', 1),
-('coord.cs004', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Vicente Guerrero', 4, 'COORDINADOR', 1),
-('coord.cs005', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Santiago Papasquiaro', 5, 'COORDINADOR', 1),
-('coord.cs006', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS El Salto', 6, 'COORDINADOR', 1),
-('coord.cs007', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Nombre de Dios', 7, 'COORDINADOR', 1),
-('coord.cs008', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Guadalupe Victoria', 8, 'COORDINADOR', 1),
-('coord.cs009', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Lerdo', 9, 'COORDINADOR', 1),
-('coord.cs010', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Canatlán', 10, 'COORDINADOR', 1),
-('coord.cs011', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Súchil', 11, 'COORDINADOR', 1),
-('coord.cs012', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Tepehuanes', 12, 'COORDINADOR', 1),
-('coord.cs013', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Cuencamé', 13, 'COORDINADOR', 1),
-('coord.cs014', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Mapimí', 14, 'COORDINADOR', 1),
-('coord.cs015', 'ngxwCvaybP85iAfLvVwMVqym+4RsilVhzVdVp5OEpeg=', 'tdknBKtiquaK+TKYRFj1zg==', 'Coordinador CS Peñón Blanco', 15, 'COORDINADOR', 1);
-
--- ============================================================================
--- 5. REGISTRADORES Y APLICADORES DE PRUEBA
--- ============================================================================
-
-INSERT INTO usuarios (username, password_hash, salt, nombre_completo, centro_id, rol, activo) VALUES
--- Registradores
-('reg.cs001.1', '2REbH/kLUygnbSWCgUCPAVF2D+5jBTA+d3FAa8moZTI=', 'CKrCNdr2BcKS7WVVfYATYQ==', 'María García - Registradora CS001', 1, 'REGISTRADOR', 1),
-('reg.cs001.2', '2REbH/kLUygnbSWCgUCPAVF2D+5jBTA+d3FAa8moZTI=', 'CKrCNdr2BcKS7WVVfYATYQ==', 'Juan Pérez - Registrador CS001', 1, 'REGISTRADOR', 1),
-('reg.cs002.1', '2REbH/kLUygnbSWCgUCPAVF2D+5jBTA+d3FAa8moZTI=', 'CKrCNdr2BcKS7WVVfYATYQ==', 'Ana López - Registradora CS002', 2, 'REGISTRADOR', 1),
-
--- Aplicadores
-('aplica.cs001.1', '9q19zp3FEaEMZPa0/jYfUQIyrRwyfOeQ8vyBJDvBYJ4=', '3OkvcBhR9vtK912zV2rwIQ==', 'Dr. Carlos Hernández - Aplicador CS001', 1, 'APLICADOR', 1),
-('aplica.cs001.2', '9q19zp3FEaEMZPa0/jYfUQIyrRwyfOeQ8vyBJDvBYJ4=', '3OkvcBhR9vtK912zV2rwIQ==', 'Enf. Laura Martínez - Aplicadora CS001', 1, 'APLICADOR', 1),
-('aplica.cs002.1', '9q19zp3FEaEMZPa0/jYfUQIyrRwyfOeQ8vyBJDvBYJ4=', '3OkvcBhR9vtK912zV2rwIQ==', 'Enf. Roberto Sánchez - Aplicador CS002', 2, 'APLICADOR', 1);
-
--- ============================================================================
--- 6. LOTES DE BIOLOGICOS DE PRUEBA
--- ============================================================================
-
-INSERT INTO lotes_biologicos (biologico, numero_lote, fecha_caducidad, cantidad_inicial, cantidad_actual, temperatura_min, temperatura_max, proveedor) VALUES
--- SRP (Triple Viral)
-('SRP', 'SRP-2026-001', '2026-12-31', 5000, 4850, 2.0, 8.0, 'Laboratorio Nacional'),
-('SRP', 'SRP-2026-002', '2026-11-30', 3000, 3000, 2.0, 8.0, 'Laboratorio Nacional'),
-('SRP', 'SRP-2026-003', '2026-10-15', 2000, 1950, 2.0, 8.0, 'Laboratorio Nacional'),
-
--- SR (Doble Viral)
-('SR', 'SR-2026-001', '2026-12-31', 1500, 1450, 2.0, 8.0, 'Laboratorio Nacional'),
-('SR', 'SR-2026-002', '2026-11-15', 1000, 1000, 2.0, 8.0, 'Laboratorio Nacional'),
-
--- VPH (Papiloma Humano)
-('VPH', 'VPH-2026-001', '2026-12-31', 2000, 1900, 2.0, 8.0, 'MSD México'),
-('VPH', 'VPH-2026-002', '2026-09-30', 500, 480, 2.0, 8.0, 'MSD México'), -- Próximo a caducar
-('VPH', 'VPH-2026-003', '2027-01-31', 1500, 1500, 2.0, 8.0, 'MSD México');
-
--- ============================================================================
--- 7. NOTAS DE IMPLEMENTACIÓN
--- ============================================================================
-
--- IMPORTANTE: Los password_hash y salt son PLACEHOLDERS.
--- Al implementar el worker.js, estos deben ser generados con:
---   1. generateSalt() usando crypto.getRandomValues
---   2. hashPassword(password, salt) usando PBKDF2 con 100000 iterations
---
--- Password por defecto para pruebas (CAMBIAR EN PRODUCCIÓN):
---   - admin: Admin123!
---   - coord.*: Coord123!
---   - reg.*: Reg123!
---   - aplica.*: Aplica123!
---
--- Para producción, cada usuario debe tener su propia contraseña segura.
+-- Centro: C.S.U. DR. ROBERTO GARCIA SOSA
+INSERT INTO centros (id, nombre, codigo, municipio, activo) VALUES (6, 'C.S.U. DR. ROBERTO GARCIA SOSA', 'ROBERTO', 'LERDO', 1);
+INSERT INTO usuarios (id, username, password_hash, salt, rol, nombre_completo, centro_id) VALUES (115, 'roberto', 'fnI/GtPmePneG4+SD+CLJHMJXb/V/O3jH3fBu0du0gg=', '1ZlczG+97sqnlDFZXWdI7w==', 'COORDINADOR', 'Coord C.S.U. DR. ROBERTO GARCIA SOSA', 6);
+INSERT INTO usuarios (id, username, password_hash, salt, rol, nombre_completo, centro_id) VALUES (116, 'reg.roberto', 'wNnLVV7jJuk7N7IHqiPlmScuiALshbKh2qpY9lAhX68=', 'jT5VZ1I6US/090AtvYSAsw==', 'REGISTRADOR', 'Reg C.S.U. DR. ROBERTO GARCIA SOSA', 6);
+INSERT INTO usuarios (id, username, password_hash, salt, rol, nombre_completo, centro_id) VALUES (117, 'app.roberto', '1zN4wk+ApmwkQ0O4M6txOVaz2u0XpPrpNpBPOU4t0Vw=', 'E60sqsTfyMsxzlDgde54sA==', 'APLICADOR', 'App C.S.U. DR. ROBERTO GARCIA SOSA', 6);
 
