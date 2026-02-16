@@ -2051,16 +2051,26 @@ async function handleReporteCSV(request, env) {
  */
 async function handleDisponibilidadPublica(request, env) {
   try {
-    // Consultar centros con turnos abiertos y su inventario disponible
+    // Consultar centros con turnos abiertos, su inventario disponible
+    // y el último corte manual (si existe) para reflejar ajustes del coordinador
     const { results } = await env.TURNO_PVU_DB.prepare(
       `SELECT c.id, c.codigo, c.nombre, c.municipio, c.latitud, c.longitud,
               t.id as turno_id, t.tipo, t.ts_apertura,
-              (t.srp_inicial - t.srp_emitidas) as srp_disponible,
-              (t.sr_inicial - t.sr_emitidas) as sr_disponible,
-              (t.vph_inicial - t.vph_emitidas) as vph_disponible,
+              COALESCE(ultimo_corte.srp_restantes, t.srp_inicial - t.srp_emitidas) as srp_disponible,
+              COALESCE(ultimo_corte.sr_restantes, t.sr_inicial - t.sr_emitidas) as sr_disponible,
+              COALESCE(ultimo_corte.vph_restantes, t.vph_inicial - t.vph_emitidas) as vph_disponible,
               t.srp_inicial, t.sr_inicial, t.vph_inicial
        FROM centros c
        LEFT JOIN turnos t ON c.id = t.centro_id AND t.abierto = 1
+       LEFT JOIN (
+           SELECT cm1.turno_id, cm1.srp_restantes, cm1.sr_restantes, cm1.vph_restantes
+           FROM cortes_manuales cm1
+           INNER JOIN (
+               SELECT turno_id, MAX(ts) as max_ts
+               FROM cortes_manuales
+               GROUP BY turno_id
+           ) cm2 ON cm1.turno_id = cm2.turno_id AND cm1.ts = cm2.max_ts
+       ) ultimo_corte ON t.id = ultimo_corte.turno_id
        WHERE c.activo = 1
        ORDER BY c.nombre ASC`
     ).all();
