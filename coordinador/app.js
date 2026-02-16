@@ -804,6 +804,11 @@ class CoordinadorApp {
     }
 
     renderVistaFichas() {
+        // Validación defensiva: asegurar que fichas es un array
+        if (!Array.isArray(this.state.fichas)) {
+            this.state.fichas = [];
+        }
+
         if (this.state.fichas.length === 0) {
             return `
                 <div class="empty-state">
@@ -832,6 +837,11 @@ class CoordinadorApp {
     }
 
     renderVistaDispositivos() {
+        // Validación defensiva: asegurar que dispositivos es un array
+        if (!Array.isArray(this.state.dispositivos)) {
+            this.state.dispositivos = [];
+        }
+
         return `
             <div class="dispositivos-panel">
                 <div class="dispositivos-header">
@@ -886,6 +896,11 @@ class CoordinadorApp {
     }
 
     renderVistaBloques() {
+        // Validación defensiva: asegurar que bloques es un array
+        if (!Array.isArray(this.state.bloques)) {
+            this.state.bloques = [];
+        }
+
         return `
             <div class="bloques-panel">
                 <h2>Distribución de Bloques de Folios</h2>
@@ -983,11 +998,14 @@ class CoordinadorApp {
             return '<div class="empty-state"><p>No hay turno activo</p></div>';
         }
 
+        // Validación defensiva: asegurar que fichas es un array
+        if (!Array.isArray(this.state.fichas)) {
+            this.state.fichas = [];
+        }
+
         const turno = this.state.turnoActivo;
         // Contar fichas emitidas pendientes de aplicar
-        const fichasEmitidas = Array.isArray(this.state.fichas)
-            ? this.state.fichas.filter(f => f.estado === 'EMITIDA').length
-            : 0;
+        const fichasEmitidas = this.state.fichas.filter(f => f.estado === 'EMITIDA').length;
 
         return `
             <div class="abrir-turno-form">
