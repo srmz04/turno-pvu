@@ -399,19 +399,23 @@ class RegistroApp {
     this.state.view = 'SUCCESS';
     const uniqueId = `qr-${Date.now()}`;
 
+    // Changed to success-view-white and removed onclick on container
     this.appEl.innerHTML = `
-      <div class="success-view" onclick="app.resetForm()">
+      <div class="success-view-white">
         <h1><i class="fas fa-check-circle"></i> Ficha Emitida</h1>
         <div class="folio-display">${ficha.folio}</div>
         
         <div class="qr-placeholder" id="${uniqueId}"></div>
         
-        <p class="text-large">
+        <p class="text-large" style="color: #333; font-weight: bold;">
           ${ficha.biologics ? ficha.biologics.join(' + ') : (ficha.asigna_srp ? 'SRP' : 'SR')} 
           ${ficha.asigna_vph || ficha.vph_tenia ? '+ VPH' : ''}
         </p>
         
-        <p class="mt-4 text-small opacity-75">Toque cualquier parte para continuar</p>
+        <!-- Botón grande para finalizar -->
+        <button class="btn btn-primary btn-large w-full" style="margin-top: 2rem; padding: 1.5rem; font-size: 1.2rem; max-width: 400px;" onclick="app.resetForm()">
+          FINALIZAR / NUEVA FICHA
+        </button>
       </div>
     `;
 
@@ -422,10 +426,7 @@ class RegistroApp {
       height: 180
     });
 
-    // Auto reset after 5s
-    setTimeout(() => {
-      if (this.state.view === 'SUCCESS') this.resetForm();
-    }, 5000);
+    // Auto reset removed
   }
 
   renderRejection(reason) {

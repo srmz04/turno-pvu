@@ -112,6 +112,25 @@ body.high-contrast input {
     align-items: center;
 }
 
+.success-view-white {
+    text-align: center;
+    padding: 40px 20px;
+    background: white;
+    color: #333;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.success-view-white h1 {
+    color: var(--success-color);
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+
 .folio-display {
     font-size: 4rem;
     font-weight: 800;
