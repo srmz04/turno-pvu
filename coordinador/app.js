@@ -16,7 +16,6 @@ class CoordinadorApp {
 
         this.state = {
             user: null,
-            user: null,
             vistaActual: auth.isAuthenticated() ? 'monitor' : 'login', // Inicializar según auth
             turnoActivo: null,
             fichas: [],
@@ -128,8 +127,9 @@ class CoordinadorApp {
         try {
             if (!this.state.turnoActivo) return;
 
-            const fichas = await api.get(`/fichas/turno/${this.state.turnoActivo.id}`);
-            this.state.fichas = fichas || [];
+            // Backend retorna { success, fichas: [...], total, stats }
+            const response = await api.get(`/fichas/turno/${this.state.turnoActivo.id}`);
+            this.state.fichas = Array.isArray(response?.fichas) ? response.fichas : [];
 
         } catch (error) {
             console.error('Error cargando fichas:', error);
@@ -140,8 +140,9 @@ class CoordinadorApp {
     async cargarDispositivos() {
         try {
             const centroId = this.state.user.centroId;
-            const dispositivos = await api.get(`/dispositivos/${centroId}`);
-            this.state.dispositivos = dispositivos || [];
+            // Backend retorna { success, dispositivos: [...] }
+            const response = await api.get(`/dispositivos/${centroId}`);
+            this.state.dispositivos = Array.isArray(response?.dispositivos) ? response.dispositivos : [];
 
         } catch (error) {
             console.error('Error cargando dispositivos:', error);
@@ -153,8 +154,9 @@ class CoordinadorApp {
         try {
             if (!this.state.turnoActivo) return;
 
-            const bloques = await api.get(`/bloques/${this.state.turnoActivo.id}`);
-            this.state.bloques = bloques || [];
+            // Backend retorna { success, bloques: [...] }
+            const response = await api.get(`/bloques/${this.state.turnoActivo.id}`);
+            this.state.bloques = Array.isArray(response?.bloques) ? response.bloques : [];
 
         } catch (error) {
             console.error('Error cargando bloques:', error);
@@ -186,13 +188,14 @@ class CoordinadorApp {
                 vph_inicial: parseInt(form.vph_inicial, 10)
             };
 
-            const turno = await api.post('/turnos/abrir', data);
+            // Backend retorna { success, turno: { id, centro_id, ... } }
+            const response = await api.post('/turnos/abrir', data);
 
             showToast('Turno abierto exitosamente', 'success');
             monitor.trackEvent('Turno', 'Abierto', form.tipo);
 
-            // Actualizar estado
-            this.state.turnoActivo = turno;
+            // Asignar turno de la respuesta y recargar datos completos del turno
+            this.state.turnoActivo = response?.turno || response;
             this.cambiarVista('monitor');
             await this.cargarDatos();
             this.render();
@@ -218,21 +221,32 @@ class CoordinadorApp {
     async cerrarTurno() {
         try {
             // Confirmar
-            if (!confirm('¿Está seguro que desea cerrar el turno?')) {
+            if (!confirm('Confirme que desea cerrar el turno. Las fichas EMITIDAS pasaran a NO_UTILIZADA.')) {
                 return;
             }
 
-            const resultado = await api.post('/turnos/cerrar', {});
+            // Leer sobrantes del formulario
+            const sobrantes_srp = parseInt(document.getElementById('sobrantes-srp')?.value || '0', 10);
+            const sobrantes_sr = parseInt(document.getElementById('sobrantes-sr')?.value || '0', 10);
+            const sobrantes_vph = parseInt(document.getElementById('sobrantes-vph')?.value || '0', 10);
 
-            // Mostrar resumen
-            this.mostrarResumenCierre(resultado);
+            const resultado = await api.post('/turnos/cerrar', {
+                sobrantes_srp,
+                sobrantes_sr,
+                sobrantes_vph
+            });
+
+            // Mostrar resumen con los datos que devuelve el backend
+            this.mostrarResumenCierre(resultado?.resumen || resultado);
 
             showToast('Turno cerrado exitosamente', 'success');
-            monitor.trackEvent('Turno', 'Cerrado', resultado.tipo);
+            monitor.trackEvent('Turno', 'Cerrado', '');
 
             // Limpiar estado
             this.state.turnoActivo = null;
             this.state.fichas = [];
+            this.state.dispositivos = [];
+            this.state.bloques = [];
             this.cambiarVista('abrir');
             this.render();
 
@@ -289,7 +303,9 @@ class CoordinadorApp {
                 nombre: nombre
             };
 
-            const dispositivo = await api.post('/dispositivos/crear', data);
+            // Backend retorna { success, dispositivo: { id, token, nombre, rol, url_generada } }
+            const response = await api.post('/dispositivos/crear', data);
+            const dispositivo = response?.dispositivo || response;
 
             showToast(`Dispositivo ${rol} creado`, 'success');
             monitor.trackEvent('Dispositivo', 'Creado', rol);
@@ -297,7 +313,7 @@ class CoordinadorApp {
             await this.cargarDispositivos();
             this.render();
 
-            // Mostrar URL
+            // Mostrar URL del nuevo dispositivo
             this.mostrarURLDispositivo(dispositivo);
 
         } catch (error) {
@@ -367,7 +383,9 @@ class CoordinadorApp {
                 return;
             }
 
+            // turno_id es requerido por el backend para validar pertenencia
             const data = {
+                turno_id: this.state.turnoActivo.id,
                 dispositivo_token,
                 folio_inicio,
                 folio_fin
@@ -637,13 +655,13 @@ class CoordinadorApp {
                             class="tipo-turno-btn ${this.state.formAbrirTurno.tipo === 'MATUTINO' ? 'selected' : ''}"
                             data-tipo="MATUTINO"
                         >
-                            ☀ Matutino
+                            Matutino
                         </button>
                         <button
                             class="tipo-turno-btn ${this.state.formAbrirTurno.tipo === 'VESPERTINO' ? 'selected' : ''}"
                             data-tipo="VESPERTINO"
                         >
-                            🌙 Vespertino
+                            Vespertino
                         </button>
                     </div>
                 </div>
@@ -738,12 +756,16 @@ class CoordinadorApp {
 
         const semaforo = this.getSemaforo(biologico);
 
+        // Etiqueta correcta segun el tipo de biologico
+        const etiquetas = { srp: 'Triple Viral', sr: 'Doble Viral', vph: 'VPH' };
+        const etiqueta = etiquetas[biologico] || biologico.toUpperCase();
+
         return `
             <div class="progress-item">
                 <div class="progress-header">
                     <div class="label">
                         <span class="semaforo ${semaforo}"></span>
-                        ${label} (Triple Viral)
+                        ${label} (${etiqueta})
                     </div>
                     <div class="value">${disponible} / ${inicial}</div>
                 </div>
@@ -937,7 +959,10 @@ class CoordinadorApp {
         }
 
         const turno = this.state.turnoActivo;
-        const fichasEmitidas = this.state.fichas.filter(f => f.estado === 'EMITIDA').length;
+        // Contar fichas emitidas pendientes de aplicar
+        const fichasEmitidas = Array.isArray(this.state.fichas)
+            ? this.state.fichas.filter(f => f.estado === 'EMITIDA').length
+            : 0;
 
         return `
             <div class="abrir-turno-form">
@@ -945,10 +970,10 @@ class CoordinadorApp {
 
                 <div class="alert-info">
                     ${fichasEmitidas > 0 ? `
-                        <p><strong>⚠ Atención:</strong> Hay ${fichasEmitidas} fichas EMITIDAS pendientes de aplicar.</p>
-                        <p>Si cierra el turno, estas fichas pasarán a estado NO_UTILIZADA.</p>
+                        <p><strong>Atencion:</strong> Hay ${fichasEmitidas} fichas EMITIDAS pendientes de aplicar.</p>
+                        <p>Si cierra el turno, estas fichas pasaran a estado NO_UTILIZADA.</p>
                     ` : `
-                        <p>✓ Todas las fichas emitidas han sido procesadas.</p>
+                        <p>Todas las fichas emitidas han sido procesadas.</p>
                     `}
                 </div>
 
@@ -962,6 +987,28 @@ class CoordinadorApp {
                     <p><strong>SRP Aplicadas:</strong> ${turno.srp_aplicadas}</p>
                     <p><strong>SR Aplicadas:</strong> ${turno.sr_aplicadas}</p>
                     <p><strong>VPH Aplicadas:</strong> ${turno.vph_aplicadas}</p>
+                </div>
+
+                <div class="form-section">
+                    <h3>Reporte de Sobrantes</h3>
+                    <p class="subtext">Ingrese las dosis fisicas sobrantes para verificacion de inventario.</p>
+                    <div class="inventario-inputs">
+                        <div class="inventario-input-group">
+                            <span class="badge badge-srp">SRP</span>
+                            <label>Sobrantes:</label>
+                            <input type="number" min="0" value="0" id="sobrantes-srp" />
+                        </div>
+                        <div class="inventario-input-group">
+                            <span class="badge badge-sr">SR</span>
+                            <label>Sobrantes:</label>
+                            <input type="number" min="0" value="0" id="sobrantes-sr" />
+                        </div>
+                        <div class="inventario-input-group">
+                            <span class="badge badge-vph">VPH</span>
+                            <label>Sobrantes:</label>
+                            <input type="number" min="0" value="0" id="sobrantes-vph" />
+                        </div>
+                    </div>
                 </div>
 
                 <button class="btn btn-danger btn-large" data-action="cerrar-turno">
