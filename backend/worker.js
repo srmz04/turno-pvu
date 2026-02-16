@@ -1546,6 +1546,9 @@ async function handleCorteManual(request, env) {
     srp_restantes: { required: false, type: 'number', min: 0 },
     sr_restantes: { required: false, type: 'number', min: 0 },
     vph_restantes: { required: false, type: 'number', min: 0 },
+    srp_aplicadas: { required: false, type: 'number', min: 0 },
+    sr_aplicadas: { required: false, type: 'number', min: 0 },
+    vph_aplicadas: { required: false, type: 'number', min: 0 },
     fichas_distribuidas: { required: false, type: 'number', min: 0 },
     fichas_entregadas: { required: false, type: 'number', min: 0 },
     fichas_restantes: { required: false, type: 'number', min: 0 },
@@ -1571,17 +1574,23 @@ async function handleCorteManual(request, env) {
       }
     }
 
-    // Insertar corte manual con campos de fichas
+    // Insertar corte manual con campos de fichas y dosis aplicadas
     await env.TURNO_PVU_DB.prepare(`
-      INSERT INTO cortes_manuales (turno_id, usuario_id, srp_restantes, sr_restantes, vph_restantes,
-        fichas_distribuidas, fichas_entregadas, fichas_restantes, notas, ts)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      INSERT INTO cortes_manuales (turno_id, usuario_id,
+        srp_restantes, sr_restantes, vph_restantes,
+        srp_aplicadas, sr_aplicadas, vph_aplicadas,
+        fichas_distribuidas, fichas_entregadas, fichas_restantes,
+        notas, ts)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
     `).bind(
       turnoId,
       authResult.userId,
       body.srp_restantes || null,
       body.sr_restantes || null,
       body.vph_restantes || null,
+      body.srp_aplicadas || 0,
+      body.sr_aplicadas || 0,
+      body.vph_aplicadas || 0,
       body.fichas_distribuidas || 0,
       body.fichas_entregadas || 0,
       body.fichas_restantes || 0,
@@ -1599,6 +1608,9 @@ async function handleCorteManual(request, env) {
         srp_restantes: body.srp_restantes,
         sr_restantes: body.sr_restantes,
         vph_restantes: body.vph_restantes,
+        srp_aplicadas: body.srp_aplicadas,
+        sr_aplicadas: body.sr_aplicadas,
+        vph_aplicadas: body.vph_aplicadas,
         fichas_distribuidas: body.fichas_distribuidas,
         fichas_entregadas: body.fichas_entregadas,
         fichas_restantes: body.fichas_restantes,
