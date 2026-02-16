@@ -1540,54 +1540,68 @@ async function handleCorteManual(request, env) {
   const body = await getRequestBody(request);
   if (!body) return errorResponse('Request body required', 400);
 
+  // turno_id es opcional: se puede hacer corte sin turno activo
   const errors = validateInput(body, {
-    turno_id: { required: true, type: 'number' },
+    turno_id: { required: false, type: 'number' },
     srp_restantes: { required: false, type: 'number', min: 0 },
     sr_restantes: { required: false, type: 'number', min: 0 },
     vph_restantes: { required: false, type: 'number', min: 0 },
+    fichas_distribuidas: { required: false, type: 'number', min: 0 },
+    fichas_entregadas: { required: false, type: 'number', min: 0 },
+    fichas_restantes: { required: false, type: 'number', min: 0 },
     notas: { required: false, type: 'string' }
   });
 
   if (errors) return errorResponse(errors.join(', '), 400, 'VALIDATION_ERROR');
 
   try {
-    // Verificar que el turno existe y pertenece al centro del usuario
-    const turno = await env.TURNO_PVU_DB.prepare(`
-      SELECT * FROM turnos WHERE id = ?
-    `).bind(body.turno_id).first();
+    // Si hay turno_id, verificar que existe y pertenece al centro del usuario
+    let turnoId = body.turno_id || null;
+    if (turnoId) {
+      const turno = await env.TURNO_PVU_DB.prepare(`
+        SELECT * FROM turnos WHERE id = ?
+      `).bind(turnoId).first();
 
-    if (!turno) {
-      return errorResponse('Turno not found', 404, 'NOT_FOUND');
+      if (!turno) {
+        return errorResponse('Turno not found', 404, 'NOT_FOUND');
+      }
+
+      if (authResult.rol === 'COORDINADOR' && turno.centro_id !== authResult.centroId) {
+        return errorResponse('No puedes hacer cortes en turnos de otro centro', 403, 'FORBIDDEN');
+      }
     }
 
-    if (authResult.rol === 'COORDINADOR' && turno.centro_id !== authResult.centroId) {
-      return errorResponse('No puedes hacer cortes en turnos de otro centro', 403, 'FORBIDDEN');
-    }
-
-    // Insertar corte manual
+    // Insertar corte manual con campos de fichas
     await env.TURNO_PVU_DB.prepare(`
-      INSERT INTO cortes_manuales (turno_id, usuario_id, srp_restantes, sr_restantes, vph_restantes, notas, ts)
-      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+      INSERT INTO cortes_manuales (turno_id, usuario_id, srp_restantes, sr_restantes, vph_restantes,
+        fichas_distribuidas, fichas_entregadas, fichas_restantes, notas, ts)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
     `).bind(
-      body.turno_id,
+      turnoId,
       authResult.userId,
       body.srp_restantes || null,
       body.sr_restantes || null,
       body.vph_restantes || null,
+      body.fichas_distribuidas || 0,
+      body.fichas_entregadas || 0,
+      body.fichas_restantes || 0,
       body.notas || null
     ).run();
 
-    // Registrar en auditoría
+    // Registrar en auditoria
     await env.TURNO_PVU_DB.prepare(`
       INSERT INTO auditoria (usuario_id, accion, entidad, entidad_id, detalle, ts)
       VALUES (?, 'CORTE_MANUAL', 'turno', ?, ?, datetime('now'))
     `).bind(
       authResult.userId,
-      body.turno_id,
+      turnoId || 0,
       JSON.stringify({
         srp_restantes: body.srp_restantes,
         sr_restantes: body.sr_restantes,
         vph_restantes: body.vph_restantes,
+        fichas_distribuidas: body.fichas_distribuidas,
+        fichas_entregadas: body.fichas_entregadas,
+        fichas_restantes: body.fichas_restantes,
         notas: body.notas
       })
     ).run();

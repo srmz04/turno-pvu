@@ -34,6 +34,8 @@ class CoordinadorApp {
                 srp_restantes: 0,
                 sr_restantes: 0,
                 vph_restantes: 0,
+                fichas_distribuidas: 0,
+                fichas_entregadas: 0,
                 notas: ''
             }
         };
@@ -422,20 +424,27 @@ class CoordinadorApp {
 
     async enviarCorteManual() {
         try {
-            if (!this.state.turnoActivo) {
-                showToast('Debe haber un turno activo', 'error');
-                return;
-            }
-
             const form = this.state.formCorteManual;
 
+            // Calcular fichas restantes
+            const fichasDistribuidas = parseInt(form.fichas_distribuidas, 10) || 0;
+            const fichasEntregadas = parseInt(form.fichas_entregadas, 10) || 0;
+            const fichasRestantes = fichasDistribuidas - fichasEntregadas;
+
             const data = {
-                turno_id: this.state.turnoActivo.id,
-                srp_restantes: parseInt(form.srp_restantes, 10),
-                sr_restantes: parseInt(form.sr_restantes, 10),
-                vph_restantes: parseInt(form.vph_restantes, 10),
+                srp_restantes: parseInt(form.srp_restantes, 10) || 0,
+                sr_restantes: parseInt(form.sr_restantes, 10) || 0,
+                vph_restantes: parseInt(form.vph_restantes, 10) || 0,
+                fichas_distribuidas: fichasDistribuidas,
+                fichas_entregadas: fichasEntregadas,
+                fichas_restantes: fichasRestantes,
                 notas: form.notas
             };
+
+            // Si hay turno activo, asociar el corte al turno
+            if (this.state.turnoActivo) {
+                data.turno_id = this.state.turnoActivo.id;
+            }
 
             await api.post('/cortes-manuales', data);
 
@@ -447,10 +456,14 @@ class CoordinadorApp {
                 srp_restantes: 0,
                 sr_restantes: 0,
                 vph_restantes: 0,
+                fichas_distribuidas: 0,
+                fichas_entregadas: 0,
                 notas: ''
             };
 
-            await this.cargarTurnoActivo();
+            if (this.state.turnoActivo) {
+                await this.cargarTurnoActivo();
+            }
             this.render();
 
         } catch (error) {
@@ -569,7 +582,8 @@ class CoordinadorApp {
         } else {
             tabs.push(
                 { id: 'abrir', label: 'Abrir Turno' },
-                { id: 'dispositivos', label: 'Dispositivos' }
+                { id: 'dispositivos', label: 'Dispositivos' },
+                { id: 'cortes', label: 'Cortes' }
             );
         }
 
@@ -926,18 +940,25 @@ class CoordinadorApp {
     }
 
     renderVistaCortes() {
+        // Calculo automatico de fichas restantes
+        const fichasDist = parseInt(this.state.formCorteManual.fichas_distribuidas, 10) || 0;
+        const fichasEntr = parseInt(this.state.formCorteManual.fichas_entregadas, 10) || 0;
+        const fichasRest = fichasDist - fichasEntr;
+
         return `
             <div class="corte-manual-form">
                 <h2>Corte Informativo Manual</h2>
 
                 <div class="alert-info">
                     <p>
-                        <strong>Uso:</strong> Solo cuando los dispositivos no tienen conexión a internet.
-                        Permite actualizar el panel público con las dosis restantes.
+                        <strong>Uso:</strong> Reportar existencias de biologico y fichas.
+                        ${this.state.turnoActivo ? '' : '<br><em>Sin turno activo: el corte se registra sin asociar a un turno.</em>'}
                     </p>
                 </div>
 
+                <!-- Seccion: Existencias de biologico -->
                 <div class="form-section">
+                    <h3>Existencias de Biologico</h3>
                     <div class="inventario-inputs">
                         <div class="inventario-input-group">
                             <span class="badge badge-srp">SRP</span>
@@ -970,15 +991,48 @@ class CoordinadorApp {
                             />
                         </div>
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <label>Notas (opcional):</label>
-                        <textarea
-                            rows="3"
-                            placeholder="Observaciones adicionales..."
-                            data-corte-field="notas"
-                        >${this.state.formCorteManual.notas}</textarea>
+                <!-- Seccion: Control de fichas -->
+                <div class="form-section">
+                    <h3>Control de Fichas</h3>
+                    <div class="inventario-inputs">
+                        <div class="inventario-input-group">
+                            <label>Fichas Distribuidas:</label>
+                            <input
+                                type="number"
+                                min="0"
+                                value="${this.state.formCorteManual.fichas_distribuidas}"
+                                data-corte-field="fichas_distribuidas"
+                                id="fichas-distribuidas"
+                            />
+                        </div>
+                        <div class="inventario-input-group">
+                            <label>Fichas Entregadas:</label>
+                            <input
+                                type="number"
+                                min="0"
+                                value="${this.state.formCorteManual.fichas_entregadas}"
+                                data-corte-field="fichas_entregadas"
+                                id="fichas-entregadas"
+                            />
+                        </div>
+                        <div class="inventario-input-group fichas-restantes">
+                            <label>Fichas Restantes:</label>
+                            <span class="fichas-restantes-value" id="fichas-restantes-display">
+                                ${fichasRest >= 0 ? fichasRest : 0}
+                            </span>
+                        </div>
                     </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Notas (opcional):</label>
+                    <textarea
+                        rows="3"
+                        placeholder="Observaciones adicionales..."
+                        data-corte-field="notas"
+                    >${this.state.formCorteManual.notas}</textarea>
                 </div>
 
                 <button class="btn btn-primary" data-action="enviar-corte">
@@ -1082,11 +1136,23 @@ class CoordinadorApp {
             });
         });
 
-        // Inputs corte manual
+        // Inputs corte manual con calculo automatico de fichas
         const corteInputs = document.querySelectorAll('[data-corte-field]');
         corteInputs.forEach(input => {
-            input.addEventListener('change', () => {
+            input.addEventListener('input', () => {
                 this.state.formCorteManual[input.dataset.corteField] = input.value;
+
+                // Recalcular fichas restantes en tiempo real
+                if (input.dataset.corteField === 'fichas_distribuidas' || input.dataset.corteField === 'fichas_entregadas') {
+                    const dist = parseInt(this.state.formCorteManual.fichas_distribuidas, 10) || 0;
+                    const entr = parseInt(this.state.formCorteManual.fichas_entregadas, 10) || 0;
+                    const rest = dist - entr;
+                    const display = document.getElementById('fichas-restantes-display');
+                    if (display) {
+                        display.textContent = rest >= 0 ? rest : 0;
+                        display.style.color = rest < 0 ? '#e74c3c' : '#27ae60';
+                    }
+                }
             });
         });
 
