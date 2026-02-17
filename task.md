@@ -1675,7 +1675,8 @@ Dependencia: Piloto exitoso en 1-2 centros + Validación de métricas.
 - [ ] Validaciones de edad (< 6 meses, > 12 años)
 - [ ] Idempotencia (duplicate idempotency_key)
 - [ ] Decremento de inventario verificado
-- [ ] Endpoint de cerrar turno
+- [x] Endpoint de cerrar turno
+  - [x] Fix: Allow closing shifts from previous dates (remove date constraint)
 - [ ] Deep health check con autenticación
 - [ ] Métricas con autenticación
 

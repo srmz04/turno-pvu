@@ -703,7 +703,7 @@ async function handleCerrarTurno(request, env) {
     // Obtener turno activo del centro del usuario
     const turno = await env.TURNO_PVU_DB.prepare(`
       SELECT * FROM turnos
-      WHERE centro_id = ? AND fecha = date('now') AND abierto = 1
+      WHERE centro_id = ? AND abierto = 1
       LIMIT 1
     `).bind(authResult.centroId).first();
 
