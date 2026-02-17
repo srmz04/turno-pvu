@@ -46,7 +46,7 @@ class ApiClient {
             // 1.2 Manejar Errores API
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || errorData.message || `Error ${response.status}`);
+                throw new Error(errorData.message || errorData.code || `Error ${response.status}`);
             }
 
             // 1.3 Exito Online
