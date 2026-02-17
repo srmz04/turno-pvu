@@ -813,6 +813,119 @@ async function handleCerrarTurno(request, env) {
   }
 }
 
+async function handleCerrarTodosTurnos(request, env) {
+  const authResult = await requireAuth(request, env, ['ADMIN']);
+  if (authResult instanceof Response) return authResult;
+
+  try {
+    // Obtener todos los turnos abiertos
+    const turnosAbiertos = await env.TURNO_PVU_DB.prepare(`
+      SELECT t.*, c.nombre as centro_nombre, c.codigo as centro_codigo
+      FROM turnos t
+      JOIN centros c ON c.id = t.centro_id
+      WHERE t.abierto = 1
+    `).all();
+
+    if (!turnosAbiertos.results || turnosAbiertos.results.length === 0) {
+      return errorResponse('No hay turnos abiertos para cerrar', 404);
+    }
+
+    const resultados = [];
+    const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+    const userAgent = request.headers.get('User-Agent');
+
+    for (const turno of turnosAbiertos.results) {
+      // Actualizar fichas EMITIDAS a NO_UTILIZADA
+      await env.TURNO_PVU_DB.prepare(`
+        UPDATE fichas SET estado = 'NO_UTILIZADA'
+        WHERE turno_id = ? AND estado = 'EMITIDA'
+      `).bind(turno.id).run();
+
+      // Contar fichas por estado
+      const stats = await env.TURNO_PVU_DB.prepare(`
+        SELECT
+          estado,
+          COUNT(*) as count,
+          SUM(asigna_srp) as srp_count,
+          SUM(asigna_sr) as sr_count,
+          SUM(asigna_vph) as vph_count
+        FROM fichas
+        WHERE turno_id = ?
+        GROUP BY estado
+      `).bind(turno.id).all();
+
+      const resumen = {
+        centro_id: turno.centro_id,
+        centro_nombre: turno.centro_nombre,
+        centro_codigo: turno.centro_codigo,
+        tipo: turno.tipo,
+        emitidas: (turno.srp_emitidas || 0) + (turno.sr_emitidas || 0),
+        aplicadas: (turno.srp_aplicadas || 0) + (turno.sr_aplicadas || 0),
+        canceladas: 0,
+        no_utilizadas: 0
+      };
+
+      stats.results.forEach(s => {
+        if (s.estado === 'CANCELADA') resumen.canceladas = s.count;
+        if (s.estado === 'NO_UTILIZADA') resumen.no_utilizadas = s.count;
+      });
+
+      // Cerrar turno
+      await env.TURNO_PVU_DB.prepare(`
+        UPDATE turnos SET abierto = 0, ts_cierre = datetime('now')
+        WHERE id = ?
+      `).bind(turno.id).run();
+
+      // Calcular métricas operativas
+      const duracionTotal = (new Date() - new Date(turno.ts_apertura)) / 1000;
+      const fichaPorHora = resumen.emitidas > 0 ? resumen.emitidas / (duracionTotal / 3600) : 0;
+
+      const totalRechazos = await env.TURNO_PVU_DB.prepare(`
+        SELECT COUNT(*) as count FROM rechazos WHERE turno_id = ?
+      `).bind(turno.id).first();
+      const rechazosCount = totalRechazos?.count || 0;
+
+      const tasaRechazo = resumen.emitidas > 0
+        ? (rechazosCount / (resumen.emitidas + rechazosCount)) * 100
+        : 0;
+      const tasaNoUtilizadas = resumen.emitidas > 0
+        ? (resumen.no_utilizadas / resumen.emitidas) * 100
+        : 0;
+
+      await env.TURNO_PVU_DB.prepare(`
+        INSERT INTO metricas_operativas
+        (centro_id, fecha, fichas_por_hora, tasa_rechazo_pct, tasa_no_utilizadas_pct)
+        VALUES (?, ?, ?, ?, ?)
+      `).bind(
+        turno.centro_id,
+        turno.fecha,
+        fichaPorHora,
+        tasaRechazo,
+        tasaNoUtilizadas
+      ).run();
+
+      await logAudit(env, authResult.userId, 'TURNO_CERRADO', 'turno', turno.id,
+        JSON.stringify(resumen), ip, userAgent);
+
+      resultados.push(resumen);
+    }
+
+    await logAudit(env, authResult.userId, 'TODOS_TURNOS_CERRADOS', 'sistema', null,
+      JSON.stringify({ total: resultados.length }), ip, userAgent);
+
+    return jsonResponse({
+      success: true,
+      message: `Se cerraron ${resultados.length} turno(s)`,
+      total_cerrados: resultados.length,
+      resultados
+    });
+
+  } catch (error) {
+    console.error('Cerrar todos turnos error:', error);
+    return errorResponse('Failed to close all turnos', 500);
+  }
+}
+
 async function handleGetTurnoActivo(request, env, centroId) {
   const authResult = await requireAuth(request, env);
   if (authResult instanceof Response) return authResult;
@@ -2630,6 +2743,9 @@ export default {
       }
       else if (path === '/api/turnos/cerrar' && method === 'POST') {
         response = await handleCerrarTurno(request, env);
+      }
+      else if (path === '/api/turnos/cerrar-todos' && method === 'POST') {
+        response = await handleCerrarTodosTurnos(request, env);
       }
       else if (path.match(/^\/api\/turnos\/activo\/(\d+)$/) && method === 'GET') {
         const centroId = path.match(/^\/api\/turnos\/activo\/(\d+)$/)[1];
