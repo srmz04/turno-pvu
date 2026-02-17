@@ -131,6 +131,11 @@ class AdminApp {
             this.cargarDashboard();
         });
 
+        // Botón cerrar todos los turnos
+        document.getElementById('cerrar-todos-turnos').addEventListener('click', () => {
+            this.cerrarTodosTurnos();
+        });
+
         // Filtros
         document.getElementById('filtro-municipio').addEventListener('change', (e) => {
             this.state.filtros.municipio = e.target.value;
@@ -882,6 +887,96 @@ class AdminApp {
             showToast('Error al cambiar estado de centro', 'error');
             this.mostrarLoading(false);
         }
+    }
+
+    // ========== CERRAR TODOS LOS TURNOS ==========
+
+    async cerrarTodosTurnos() {
+        const centrosActivos = this.state.centros.filter(c => c.turno_abierto).length;
+
+        if (centrosActivos === 0) {
+            showToast('No hay turnos abiertos para cerrar', 'warning');
+            return;
+        }
+
+        if (!confirm(`Se cerraran ${centrosActivos} turno(s) abierto(s). Las fichas EMITIDAS pasaran a NO_UTILIZADA. Los sobrantes se reportaran como 0.\n\n¿Desea continuar?`)) {
+            return;
+        }
+
+        try {
+            this.mostrarLoading(true);
+
+            const resultado = await api.post('/turnos/cerrar-todos', {});
+
+            if (resultado.success) {
+                this.mostrarResumenCierreTodos(resultado);
+                showToast(`${resultado.total_cerrados} turno(s) cerrado(s) exitosamente`, 'success');
+                await this.cargarDashboard();
+            }
+
+            this.mostrarLoading(false);
+
+        } catch (error) {
+            console.error('Error cerrando todos los turnos:', error);
+            showToast(error.message || 'Error al cerrar todos los turnos', 'error');
+            this.mostrarLoading(false);
+        }
+    }
+
+    mostrarResumenCierreTodos(resultado) {
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;';
+
+        let detalleHTML = '';
+        resultado.resultados.forEach(r => {
+            detalleHTML += `
+                <tr>
+                    <td><strong>${r.centro_codigo}</strong></td>
+                    <td>${r.centro_nombre}</td>
+                    <td>${r.tipo}</td>
+                    <td>${r.emitidas}</td>
+                    <td>${r.aplicadas}</td>
+                    <td>${r.no_utilizadas}</td>
+                </tr>
+            `;
+        });
+
+        modal.innerHTML = `
+            <div class="modal-content" style="background:white;border-radius:8px;padding:24px;max-width:700px;width:90%;max-height:80vh;overflow-y:auto;">
+                <h3 style="margin-bottom:16px;">Turnos Cerrados: ${resultado.total_cerrados}</h3>
+                <div class="table-wrapper">
+                    <table class="centros-table" style="width:100%;">
+                        <thead>
+                            <tr>
+                                <th>Codigo</th>
+                                <th>Centro</th>
+                                <th>Tipo</th>
+                                <th>Emitidas</th>
+                                <th>Aplicadas</th>
+                                <th>No Utilizadas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${detalleHTML}
+                        </tbody>
+                    </table>
+                </div>
+                <div style="text-align:center;margin-top:16px;">
+                    <button class="btn-primary" id="btn-cerrar-resumen-todos">Cerrar</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        document.getElementById('btn-cerrar-resumen-todos').addEventListener('click', () => {
+            modal.remove();
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.remove();
+        });
     }
 
     // ========== UTILIDADES ==========
