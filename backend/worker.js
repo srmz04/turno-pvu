@@ -957,13 +957,12 @@ async function handleEmitirFicha(request, env) {
       return errorResponse('Dosis de VPH agotadas', 409, 'DOSIS_AGOTADAS');
     }
 
-    // PASO 6: Idempotencia - buscar ficha duplicada en últimos 60 seg
-    const sixtySecondsAgo = new Date(Date.now() - 60000).toISOString();
+    // PASO 6: Idempotencia - buscar ficha duplicada en el mismo turno (sin límite de tiempo)
     const existing = await env.TURNO_PVU_DB.prepare(`
       SELECT * FROM fichas
-      WHERE idempotency_key = ? AND ts_emision > ?
+      WHERE idempotency_key = ? AND turno_id = ?
       LIMIT 1
-    `).bind(idempotency_key, sixtySecondsAgo).first();
+    `).bind(idempotency_key, turno.id).first();
 
     if (existing) {
       // Retornar ficha existente
@@ -1260,6 +1259,82 @@ async function handleAplicarFicha(request, env, folio) {
   }
 }
 
+async function handleCancelarFicha(request, env, folio) {
+  const authResult = await requireAuth(request, env, ['COORDINADOR', 'ADMIN']);
+  if (authResult instanceof Response) return authResult;
+
+  const body = await getRequestBody(request);
+  const motivo = body?.motivo || 'Cancelada por coordinador';
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+
+  try {
+    const ficha = await env.TURNO_PVU_DB.prepare(`
+      SELECT f.*, t.centro_id, t.abierto
+      FROM fichas f
+      JOIN turnos t ON f.turno_id = t.id
+      WHERE f.folio = ?
+    `).bind(folio).first();
+
+    if (!ficha) {
+      return errorResponse('Ficha not found', 404);
+    }
+
+    if (ficha.estado !== 'EMITIDA') {
+      return errorResponse('Solo se pueden cancelar fichas en estado EMITIDA', 400, 'ESTADO_INVALIDO');
+    }
+
+    if (authResult.rol === 'COORDINADOR' && ficha.centro_id !== authResult.centroId) {
+      return errorResponse('No puedes cancelar fichas de otro centro', 403, 'FORBIDDEN');
+    }
+
+    // Cancelar ficha y devolver inventario atómicamente
+    const cancelBatch = [
+      env.TURNO_PVU_DB.prepare(`
+        UPDATE fichas SET estado = 'CANCELADA', motivo_cancelacion = ?
+        WHERE folio = ? AND estado = 'EMITIDA'
+      `).bind(motivo, folio)
+    ];
+
+    // Devolver dosis al inventario
+    if (ficha.asigna_srp) {
+      cancelBatch.push(env.TURNO_PVU_DB.prepare(`
+        UPDATE turnos SET srp_emitidas = MAX(srp_emitidas - 1, 0)
+        WHERE id = ?
+      `).bind(ficha.turno_id));
+    }
+    if (ficha.asigna_sr) {
+      cancelBatch.push(env.TURNO_PVU_DB.prepare(`
+        UPDATE turnos SET sr_emitidas = MAX(sr_emitidas - 1, 0)
+        WHERE id = ?
+      `).bind(ficha.turno_id));
+    }
+    if (ficha.asigna_vph) {
+      cancelBatch.push(env.TURNO_PVU_DB.prepare(`
+        UPDATE turnos SET vph_emitidas = MAX(vph_emitidas - 1, 0)
+        WHERE id = ?
+      `).bind(ficha.turno_id));
+    }
+
+    await env.TURNO_PVU_DB.batch(cancelBatch);
+
+    await logAudit(env, authResult.userId, 'FICHA_CANCELADA', 'ficha', folio,
+      JSON.stringify({ folio, motivo }), ip, request.headers.get('User-Agent'));
+
+    const fichaActualizada = await env.TURNO_PVU_DB.prepare(`
+      SELECT * FROM fichas WHERE folio = ?
+    `).bind(folio).first();
+
+    return jsonResponse({
+      success: true,
+      ficha: fichaActualizada,
+      message: 'Ficha cancelada e inventario devuelto'
+    });
+  } catch (error) {
+    console.error('Cancelar ficha error:', error);
+    return errorResponse('Failed to cancel ficha', 500);
+  }
+}
+
 async function handleGetFichasTurno(request, env, turnoId) {
   const authResult = await requireAuth(request, env, ['COORDINADOR', 'ADMIN']);
   if (authResult instanceof Response) return authResult;
@@ -1412,7 +1487,7 @@ async function handleGetDashboard(request, env) {
   if (authResult instanceof Response) return authResult;
 
   try {
-    // Dashboard consolidado de todos los centros
+    // Dashboard consolidado de todos los centros (con cortes manuales)
     const centrosData = await env.TURNO_PVU_DB.prepare(`
       SELECT
         c.id,
@@ -1431,15 +1506,36 @@ async function handleGetDashboard(request, env) {
         t.srp_aplicadas,
         t.sr_aplicadas,
         t.vph_aplicadas,
-        (t.srp_inicial - t.srp_emitidas) as srp_disponible,
-        (t.sr_inicial - t.sr_emitidas) as sr_disponible,
-        (t.vph_inicial - t.vph_emitidas) as vph_disponible,
+        COALESCE(
+          MAX(0, uc.srp_restantes - (t.srp_emitidas - uc.srp_emitidas_al_corte)),
+          t.srp_inicial - t.srp_emitidas
+        ) as srp_disponible,
+        COALESCE(
+          MAX(0, uc.sr_restantes - (t.sr_emitidas - uc.sr_emitidas_al_corte)),
+          t.sr_inicial - t.sr_emitidas
+        ) as sr_disponible,
+        COALESCE(
+          MAX(0, uc.vph_restantes - (t.vph_emitidas - uc.vph_emitidas_al_corte)),
+          t.vph_inicial - t.vph_emitidas
+        ) as vph_disponible,
         CASE
           WHEN t.srp_emitidas > 0 THEN CAST((t.srp_inicial - t.srp_emitidas) * 100.0 / t.srp_inicial AS INTEGER)
           ELSE 100
         END as srp_pct_disponible
       FROM centros c
       LEFT JOIN turnos t ON c.id = t.centro_id AND t.fecha = date('now') AND t.abierto = 1
+      LEFT JOIN (
+          SELECT cm1.turno_id, cm1.srp_restantes, cm1.sr_restantes, cm1.vph_restantes,
+                 COALESCE(cm1.srp_emitidas_al_corte, 0) as srp_emitidas_al_corte,
+                 COALESCE(cm1.sr_emitidas_al_corte, 0) as sr_emitidas_al_corte,
+                 COALESCE(cm1.vph_emitidas_al_corte, 0) as vph_emitidas_al_corte
+          FROM cortes_manuales cm1
+          INNER JOIN (
+              SELECT turno_id, MAX(ts) as max_ts
+              FROM cortes_manuales
+              GROUP BY turno_id
+          ) cm2 ON cm1.turno_id = cm2.turno_id AND cm1.ts = cm2.max_ts
+      ) uc ON t.id = uc.turno_id
       WHERE c.activo = 1
       ORDER BY c.codigo
     `).all();
@@ -1498,8 +1594,8 @@ async function handleGetDashboardCentro(request, env, centroId) {
     `).bind(centroId).first();
 
     // Fichas del turno (si existe)
-    let fichas = [];
     let stats_fichas = {};
+    let inventario_ajustado = null;
     if (turno) {
       const fichasResult = await env.TURNO_PVU_DB.prepare(`
         SELECT
@@ -1514,6 +1610,31 @@ async function handleGetDashboardCentro(request, env, centroId) {
       `).bind(turno.id).first();
 
       stats_fichas = fichasResult;
+
+      // Último corte manual para ajustar inventario (misma lógica que dashboard público)
+      const ultimoCorte = await env.TURNO_PVU_DB.prepare(`
+        SELECT srp_restantes, sr_restantes, vph_restantes,
+               COALESCE(srp_emitidas_al_corte, 0) as srp_emitidas_al_corte,
+               COALESCE(sr_emitidas_al_corte, 0) as sr_emitidas_al_corte,
+               COALESCE(vph_emitidas_al_corte, 0) as vph_emitidas_al_corte
+        FROM cortes_manuales
+        WHERE turno_id = ?
+        ORDER BY ts DESC LIMIT 1
+      `).bind(turno.id).first();
+
+      if (ultimoCorte && ultimoCorte.srp_restantes != null) {
+        inventario_ajustado = {
+          srp_disponible: Math.max(0, ultimoCorte.srp_restantes - (turno.srp_emitidas - ultimoCorte.srp_emitidas_al_corte)),
+          sr_disponible: Math.max(0, ultimoCorte.sr_restantes - (turno.sr_emitidas - ultimoCorte.sr_emitidas_al_corte)),
+          vph_disponible: Math.max(0, (ultimoCorte.vph_restantes || 0) - (turno.vph_emitidas - ultimoCorte.vph_emitidas_al_corte))
+        };
+      } else {
+        inventario_ajustado = {
+          srp_disponible: turno.srp_inicial - turno.srp_emitidas,
+          sr_disponible: turno.sr_inicial - turno.sr_emitidas,
+          vph_disponible: turno.vph_inicial - turno.vph_emitidas
+        };
+      }
     }
 
     return jsonResponse({
@@ -1521,6 +1642,7 @@ async function handleGetDashboardCentro(request, env, centroId) {
       centro,
       turno,
       stats_fichas,
+      inventario_ajustado,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
@@ -1566,8 +1688,9 @@ async function handleCorteManual(request, env) {
   try {
     // Si hay turno_id, verificar que existe y pertenece al centro del usuario
     let turnoId = body.turno_id || null;
+    let turno = null;
     if (turnoId) {
-      const turno = await env.TURNO_PVU_DB.prepare(`
+      turno = await env.TURNO_PVU_DB.prepare(`
         SELECT * FROM turnos WHERE id = ?
       `).bind(turnoId).first();
 
@@ -1580,16 +1703,22 @@ async function handleCorteManual(request, env) {
       }
     }
 
-    // Insertar corte manual con campos de fichas y dosis aplicadas
+    // Snapshot de emitidas al momento del corte (para calcular delta en dashboard)
+    const srpEmitidas = turno ? turno.srp_emitidas : 0;
+    const srEmitidas = turno ? turno.sr_emitidas : 0;
+    const vphEmitidas = turno ? turno.vph_emitidas : 0;
+
+    // Insertar corte manual con campos de fichas, dosis aplicadas y snapshot de emitidas
     await env.TURNO_PVU_DB.prepare(`
       INSERT INTO cortes_manuales (turno_id, usuario_id,
         srp_restantes, sr_restantes, vph_restantes,
         srp_aplicadas, sr_aplicadas, vph_aplicadas,
         srp_inicial, sr_inicial, vph_inicial,
         srp_entradas, sr_entradas, vph_entradas,
+        srp_emitidas_al_corte, sr_emitidas_al_corte, vph_emitidas_al_corte,
         fichas_distribuidas, fichas_entregadas, fichas_restantes,
         notas, ts)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
     `).bind(
       turnoId,
       authResult.userId,
@@ -1605,6 +1734,9 @@ async function handleCorteManual(request, env) {
       body.srp_entradas || 0,
       body.sr_entradas || 0,
       body.vph_entradas || 0,
+      srpEmitidas,
+      srEmitidas,
+      vphEmitidas,
       body.fichas_distribuidas || 0,
       body.fichas_entregadas || 0,
       body.fichas_restantes || 0,
@@ -1695,28 +1827,52 @@ async function handleSyncOffline(request, env) {
           throw new Error('Datos de edad invalidos');
         }
 
-        // Insertar la ficha
-        await env.TURNO_PVU_DB.prepare(`
-          INSERT INTO fichas (
-            folio, turno_id, consecutivo, edad_anios, edad_meses, sexo,
-            asigna_srp, asigna_sr, asigna_vph, estado,
-            ts_emision, usuario_registro_id, idempotency_key
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `).bind(
-          fichaOffline.folio,
-          fichaOffline.turno_id,
-          fichaOffline.consecutivo,
-          fichaOffline.edad_anios,
-          fichaOffline.edad_meses,
-          fichaOffline.sexo,
-          fichaOffline.asigna_srp || 0,
-          fichaOffline.asigna_sr || 0,
-          fichaOffline.asigna_vph || 0,
-          fichaOffline.estado || 'EMITIDA',
-          fichaOffline.ts_emision,
-          authResult.userId,
-          fichaOffline.idempotency_key
-        ).run();
+        // Insertar ficha y actualizar contadores atómicamente
+        const syncBatch = [
+          env.TURNO_PVU_DB.prepare(`
+            INSERT INTO fichas (
+              folio, turno_id, consecutivo, edad_anios, edad_meses, sexo,
+              asigna_srp, asigna_sr, asigna_vph, estado,
+              ts_emision, usuario_registro_id, idempotency_key
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).bind(
+            fichaOffline.folio,
+            fichaOffline.turno_id,
+            fichaOffline.consecutivo,
+            fichaOffline.edad_anios,
+            fichaOffline.edad_meses,
+            fichaOffline.sexo,
+            fichaOffline.asigna_srp || 0,
+            fichaOffline.asigna_sr || 0,
+            fichaOffline.asigna_vph || 0,
+            fichaOffline.estado || 'EMITIDA',
+            fichaOffline.ts_emision,
+            authResult.userId,
+            fichaOffline.idempotency_key
+          )
+        ];
+
+        // Actualizar contadores del turno (misma lógica que handleEmitirFicha)
+        if (fichaOffline.asigna_srp) {
+          syncBatch.push(env.TURNO_PVU_DB.prepare(`
+            UPDATE turnos SET srp_emitidas = srp_emitidas + 1
+            WHERE id = ? AND srp_emitidas < srp_inicial
+          `).bind(fichaOffline.turno_id));
+        }
+        if (fichaOffline.asigna_sr) {
+          syncBatch.push(env.TURNO_PVU_DB.prepare(`
+            UPDATE turnos SET sr_emitidas = sr_emitidas + 1
+            WHERE id = ? AND sr_emitidas < sr_inicial
+          `).bind(fichaOffline.turno_id));
+        }
+        if (fichaOffline.asigna_vph) {
+          syncBatch.push(env.TURNO_PVU_DB.prepare(`
+            UPDATE turnos SET vph_emitidas = vph_emitidas + 1
+            WHERE id = ? AND vph_emitidas < vph_inicial
+          `).bind(fichaOffline.turno_id));
+        }
+
+        await env.TURNO_PVU_DB.batch(syncBatch);
 
         resultados.exitosas++;
         resultados.detalles.push({
@@ -2053,17 +2209,32 @@ async function handleDisponibilidadPublica(request, env) {
   try {
     // Consultar centros con turnos abiertos, su inventario disponible
     // y el último corte manual (si existe) para reflejar ajustes del coordinador
+    // Dashboard público: si hay corte manual, calcula restantes ajustando
+    // por las fichas emitidas DESPUÉS del corte (delta de emitidas).
+    // Fórmula: corte.srp_restantes - (emitidas_actual - emitidas_al_corte)
     const { results } = await env.TURNO_PVU_DB.prepare(
       `SELECT c.id, c.codigo, c.nombre, c.municipio, c.latitud, c.longitud,
               t.id as turno_id, t.tipo, t.ts_apertura,
-              COALESCE(ultimo_corte.srp_restantes, t.srp_inicial - t.srp_emitidas) as srp_disponible,
-              COALESCE(ultimo_corte.sr_restantes, t.sr_inicial - t.sr_emitidas) as sr_disponible,
-              COALESCE(ultimo_corte.vph_restantes, t.vph_inicial - t.vph_emitidas) as vph_disponible,
+              COALESCE(
+                MAX(0, ultimo_corte.srp_restantes - (t.srp_emitidas - ultimo_corte.srp_emitidas_al_corte)),
+                t.srp_inicial - t.srp_emitidas
+              ) as srp_disponible,
+              COALESCE(
+                MAX(0, ultimo_corte.sr_restantes - (t.sr_emitidas - ultimo_corte.sr_emitidas_al_corte)),
+                t.sr_inicial - t.sr_emitidas
+              ) as sr_disponible,
+              COALESCE(
+                MAX(0, ultimo_corte.vph_restantes - (t.vph_emitidas - ultimo_corte.vph_emitidas_al_corte)),
+                t.vph_inicial - t.vph_emitidas
+              ) as vph_disponible,
               t.srp_inicial, t.sr_inicial, t.vph_inicial
        FROM centros c
        LEFT JOIN turnos t ON c.id = t.centro_id AND t.abierto = 1
        LEFT JOIN (
-           SELECT cm1.turno_id, cm1.srp_restantes, cm1.sr_restantes, cm1.vph_restantes
+           SELECT cm1.turno_id, cm1.srp_restantes, cm1.sr_restantes, cm1.vph_restantes,
+                  COALESCE(cm1.srp_emitidas_al_corte, 0) as srp_emitidas_al_corte,
+                  COALESCE(cm1.sr_emitidas_al_corte, 0) as sr_emitidas_al_corte,
+                  COALESCE(cm1.vph_emitidas_al_corte, 0) as vph_emitidas_al_corte
            FROM cortes_manuales cm1
            INNER JOIN (
                SELECT turno_id, MAX(ts) as max_ts
@@ -2615,6 +2786,10 @@ export default {
       else if (path.match(/^\/api\/fichas\/([A-Z0-9-]+)\/aplicar$/) && method === 'PATCH') {
         const folio = path.match(/^\/api\/fichas\/([A-Z0-9-]+)\/aplicar$/)[1];
         response = await handleAplicarFicha(request, env, folio);
+      }
+      else if (path.match(/^\/api\/fichas\/([A-Z0-9-]+)\/cancelar$/) && method === 'PATCH') {
+        const folio = path.match(/^\/api\/fichas\/([A-Z0-9-]+)\/cancelar$/)[1];
+        response = await handleCancelarFicha(request, env, folio);
       }
       else if (path.match(/^\/api\/fichas\/turno\/(\d+)$/) && method === 'GET') {
         const turnoId = path.match(/^\/api\/fichas\/turno\/(\d+)$/)[1];

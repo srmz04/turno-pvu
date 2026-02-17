@@ -172,6 +172,22 @@ CREATE TABLE IF NOT EXISTS cortes_manuales (
     srp_restantes INTEGER,
     sr_restantes INTEGER,
     vph_restantes INTEGER,
+    srp_aplicadas INTEGER DEFAULT 0,
+    sr_aplicadas INTEGER DEFAULT 0,
+    vph_aplicadas INTEGER DEFAULT 0,
+    srp_inicial INTEGER DEFAULT 0,
+    sr_inicial INTEGER DEFAULT 0,
+    vph_inicial INTEGER DEFAULT 0,
+    srp_entradas INTEGER DEFAULT 0,
+    sr_entradas INTEGER DEFAULT 0,
+    vph_entradas INTEGER DEFAULT 0,
+    -- Snapshot de emitidas al momento del corte (para calcular delta)
+    srp_emitidas_al_corte INTEGER DEFAULT 0,
+    sr_emitidas_al_corte INTEGER DEFAULT 0,
+    vph_emitidas_al_corte INTEGER DEFAULT 0,
+    fichas_distribuidas INTEGER DEFAULT 0,
+    fichas_entregadas INTEGER DEFAULT 0,
+    fichas_restantes INTEGER DEFAULT 0,
     notas TEXT,
     ts TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (turno_id) REFERENCES turnos(id),
@@ -339,18 +355,27 @@ CREATE INDEX IF NOT EXISTS idx_metricas_centro_fecha ON metricas_operativas(cent
 -- VIEWS PARA CONSULTAS COMUNES
 -- ============================================================================
 
--- Vista de inventario actual por centro
+-- Vista de inventario actual por centro (con ajuste por cortes manuales)
 CREATE VIEW IF NOT EXISTS v_inventario_actual AS
-SELECT 
+SELECT
     c.id as centro_id,
     c.codigo,
     c.nombre,
     t.id as turno_id,
     t.fecha,
     t.tipo,
-    (t.srp_inicial - t.srp_emitidas) as srp_disponible,
-    (t.sr_inicial - t.sr_emitidas) as sr_disponible,
-    (t.vph_inicial - t.vph_emitidas) as vph_disponible,
+    COALESCE(
+        MAX(0, uc.srp_restantes - (t.srp_emitidas - uc.srp_emitidas_al_corte)),
+        t.srp_inicial - t.srp_emitidas
+    ) as srp_disponible,
+    COALESCE(
+        MAX(0, uc.sr_restantes - (t.sr_emitidas - uc.sr_emitidas_al_corte)),
+        t.sr_inicial - t.sr_emitidas
+    ) as sr_disponible,
+    COALESCE(
+        MAX(0, uc.vph_restantes - (t.vph_emitidas - uc.vph_emitidas_al_corte)),
+        t.vph_inicial - t.vph_emitidas
+    ) as vph_disponible,
     t.srp_emitidas,
     t.sr_emitidas,
     t.vph_emitidas,
@@ -359,6 +384,18 @@ SELECT
     t.vph_aplicadas
 FROM centros c
 LEFT JOIN turnos t ON c.id = t.centro_id AND t.abierto = 1
+LEFT JOIN (
+    SELECT cm1.turno_id, cm1.srp_restantes, cm1.sr_restantes, cm1.vph_restantes,
+           COALESCE(cm1.srp_emitidas_al_corte, 0) as srp_emitidas_al_corte,
+           COALESCE(cm1.sr_emitidas_al_corte, 0) as sr_emitidas_al_corte,
+           COALESCE(cm1.vph_emitidas_al_corte, 0) as vph_emitidas_al_corte
+    FROM cortes_manuales cm1
+    INNER JOIN (
+        SELECT turno_id, MAX(ts) as max_ts
+        FROM cortes_manuales
+        GROUP BY turno_id
+    ) cm2 ON cm1.turno_id = cm2.turno_id AND cm1.ts = cm2.max_ts
+) uc ON t.id = uc.turno_id
 WHERE c.activo = 1;
 
 -- Vista de alertas activas
