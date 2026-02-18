@@ -17,7 +17,7 @@
     padding: 1.5rem;
     margin: -1rem -1rem 1.5rem -1rem;
     border-radius: 0 0 12px 12px;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
 }
 
 .coordinador-header h1 {
@@ -66,7 +66,7 @@
     background: white;
     padding: 2rem;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     max-width: 600px;
     margin: 0 auto;
 }
@@ -155,9 +155,20 @@
     font-size: 0.9rem;
 }
 
-.badge-srp { background: #ff6b6b; color: white; }
-.badge-sr { background: #a569bd; color: white; }
-.badge-vph { background: #f39c12; color: white; }
+.badge-srp {
+    background: #ff6b6b;
+    color: white;
+}
+
+.badge-sr {
+    background: #a569bd;
+    color: white;
+}
+
+.badge-vph {
+    background: #f39c12;
+    color: white;
+}
 
 /* ===== VISTA: MONITOR ===== */
 .monitor-panel {
@@ -176,7 +187,7 @@
     background: white;
     padding: 1.5rem;
     border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .stat-card .label {
@@ -204,7 +215,7 @@
     background: white;
     padding: 1.5rem;
     border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .progress-item {
@@ -253,9 +264,17 @@
     font-size: 0.85rem;
 }
 
-.progress-bar-fill.srp { background: linear-gradient(90deg, #ff6b6b, #ee5a6f); }
-.progress-bar-fill.sr { background: linear-gradient(90deg, #a569bd, #8e44ad); }
-.progress-bar-fill.vph { background: linear-gradient(90deg, #f39c12, #e67e22); }
+.progress-bar-fill.srp {
+    background: linear-gradient(90deg, #ff6b6b, #ee5a6f);
+}
+
+.progress-bar-fill.sr {
+    background: linear-gradient(90deg, #a569bd, #8e44ad);
+}
+
+.progress-bar-fill.vph {
+    background: linear-gradient(90deg, #f39c12, #e67e22);
+}
 
 /* Semáforo de estado */
 .semaforo {
@@ -266,16 +285,27 @@
     margin-right: 0.5rem;
 }
 
-.semaforo.verde { background: #2ecc71; box-shadow: 0 0 8px #2ecc71; }
-.semaforo.amarillo { background: #f39c12; box-shadow: 0 0 8px #f39c12; }
-.semaforo.rojo { background: #e74c3c; box-shadow: 0 0 8px #e74c3c; }
+.semaforo.verde {
+    background: #2ecc71;
+    box-shadow: 0 0 8px #2ecc71;
+}
+
+.semaforo.amarillo {
+    background: #f39c12;
+    box-shadow: 0 0 8px #f39c12;
+}
+
+.semaforo.rojo {
+    background: #e74c3c;
+    box-shadow: 0 0 8px #e74c3c;
+}
 
 /* ===== VISTA: DISPOSITIVOS ===== */
 .dispositivos-panel {
     background: white;
     padding: 1.5rem;
     border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .dispositivos-header {
@@ -351,7 +381,7 @@
     background: white;
     padding: 1.5rem;
     border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .bloque-card {
@@ -379,7 +409,7 @@
     background: white;
     padding: 2rem;
     border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     max-width: 600px;
 }
 
@@ -401,7 +431,7 @@
     background: white;
     padding: 1rem;
     border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .ficha-item {
@@ -433,10 +463,25 @@
     text-transform: uppercase;
 }
 
-.ficha-estado.emitida { background: #3498db; color: white; }
-.ficha-estado.aplicada { background: #2ecc71; color: white; }
-.ficha-estado.cancelada { background: #e74c3c; color: white; }
-.ficha-estado.no_utilizada { background: #95a5a6; color: white; }
+.ficha-estado.emitida {
+    background: #3498db;
+    color: white;
+}
+
+.ficha-estado.aplicada {
+    background: #2ecc71;
+    color: white;
+}
+
+.ficha-estado.cancelada {
+    background: #e74c3c;
+    color: white;
+}
+
+.ficha-estado.no_utilizada {
+    background: #95a5a6;
+    color: white;
+}
 
 /* ===== MODALES ===== */
 .modal-overlay {
@@ -445,7 +490,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0,0,0,0.6);
+    background: rgba(0, 0, 0, 0.6);
     z-index: 999;
     display: flex;
     align-items: center;
@@ -461,7 +506,7 @@
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .modal-content h3 {
@@ -486,6 +531,150 @@
     font-size: 4rem;
     margin-bottom: 1rem;
     opacity: 0.3;
+}
+
+/* ===== VISTA: RESUMEN DEL DIA ===== */
+.vista-resumen {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.resumen-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.resumen-header h2 {
+    margin: 0;
+    color: var(--primary-color);
+}
+
+/* Hora de actualizacion y tipo de turno */
+.resumen-timestamp {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+}
+
+/* Tarjetas de conteo global */
+.resumen-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+}
+
+.resumen-card {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    border-top: 4px solid var(--primary-color);
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.resumen-card--verde {
+    border-top-color: #2ecc71;
+}
+
+.resumen-card--amarillo {
+    border-top-color: #f39c12;
+}
+
+.resumen-card-valor {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #2c3e50;
+    line-height: 1;
+}
+
+.resumen-card-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #7f8c8d;
+}
+
+/* Secciones internas (desglose e historial) */
+.resumen-seccion {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.resumen-seccion h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    color: #2c3e50;
+    border-bottom: 1px solid #ecf0f1;
+    padding-bottom: 0.5rem;
+}
+
+/* Tabla compartida para desglose e historial */
+.resumen-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.resumen-tabla th {
+    background: #f8f9fa;
+    padding: 0.6rem 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    color: #555;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.resumen-tabla td {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid #f0f0f0;
+    color: #2c3e50;
+}
+
+.resumen-tabla tr:last-child td {
+    border-bottom: none;
+}
+
+.resumen-tabla tr:hover td {
+    background: #fafafa;
+}
+
+/* Colores de texto para estados */
+.texto-verde {
+    color: #27ae60;
+    font-weight: 600;
+}
+
+.texto-amarillo {
+    color: #e67e22;
+    font-weight: 600;
+}
+
+/* Badges de estado en la tabla de historial */
+.badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.badge-verde {
+    background: #d5f5e3;
+    color: #1e8449;
+}
+
+.badge-amarillo {
+    background: #fef9e7;
+    color: #b7770d;
 }
 
 /* ===== RESPONSIVE ===== */

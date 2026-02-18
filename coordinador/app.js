@@ -502,12 +502,15 @@ class CoordinadorApp {
     // ===== HELPERS =====
 
     iniciarAutoRefresh() {
+        // Limpiar timer previo para evitar acumulación de intervalos
         if (this.state.refreshInterval) {
             clearInterval(this.state.refreshInterval);
         }
 
         this.state.refreshInterval = setInterval(async () => {
-            if (this.state.turnoActivo && this.state.vistaActual === 'monitor') {
+            // Refrescar solo cuando hay turno activo y la vista es monitor o resumen
+            const vistaConRefresh = ['monitor', 'resumen'];
+            if (this.state.turnoActivo && vistaConRefresh.includes(this.state.vistaActual)) {
                 await this.cargarDatos();
                 this.render();
             }
@@ -516,6 +519,14 @@ class CoordinadorApp {
 
     cambiarVista(vista) {
         this.state.vistaActual = vista;
+
+        // Al activar la vista resumen con turno activo, refrescar fichas de inmediato
+        // para no esperar el ciclo de 30s del auto-refresh
+        if (vista === 'resumen' && this.state.turnoActivo) {
+            this.cargarFichas().then(() => this.render());
+            return; // render() se llama dentro del then()
+        }
+
         this.render();
     }
 
@@ -596,11 +607,12 @@ class CoordinadorApp {
     renderNavTabs() {
         const tabs = [];
 
-        // Determinar qué tabs mostrar
+        // Determinar qué tabs mostrar según si hay turno activo
         if (this.state.turnoActivo) {
             tabs.push(
                 { id: 'monitor', label: 'Monitor' },
                 { id: 'fichas', label: 'Fichas' },
+                { id: 'resumen', label: 'Resumen' },
                 { id: 'dispositivos', label: 'Dispositivos' },
                 { id: 'bloques', label: 'Bloques' },
                 { id: 'cortes', label: 'Cortes' },
@@ -609,6 +621,7 @@ class CoordinadorApp {
         } else {
             tabs.push(
                 { id: 'abrir', label: 'Abrir Turno' },
+                { id: 'resumen', label: 'Resumen' },
                 { id: 'dispositivos', label: 'Dispositivos' },
                 { id: 'cortes', label: 'Cortes' }
             );
@@ -638,6 +651,8 @@ class CoordinadorApp {
                 return this.renderVistaMonitor();
             case 'fichas':
                 return this.renderVistaFichas();
+            case 'resumen':
+                return this.renderVistaResumen();
             case 'dispositivos':
                 return this.renderVistaDispositivos();
             case 'bloques':
@@ -834,6 +849,138 @@ class CoordinadorApp {
                 </div>
             </div>
         `;
+    }
+
+    /**
+ * Vista Resumen del Dia
+ * Calcula metricas directamente desde this.state.fichas (datos ya cargados),
+ * sin necesidad de un nuevo endpoint. Patron recomendado por el asesor externo
+ * para evitar riesgo en el backend.
+ */
+    renderVistaResumen() {
+        // Si no hay turno activo, mostrar mensaje orientativo
+        if (!this.state.turnoActivo) {
+            return `
+            <div class="vista-resumen">
+                <h2>Resumen del Dia</h2>
+                <div class="empty-state">
+                    <p>No hay turno activo. Abre un turno para ver el resumen de fichas del dia.</p>
+                </div>
+            </div>
+        `;
+        }
+
+        const fichas = this.state.fichas;
+
+        // --- Conteos globales ---
+        const emitidas = fichas.length;
+        const aplicadas = fichas.filter(f => f.estado === 'APLICADA').length;
+        const pendientes = fichas.filter(f => f.estado === 'EMITIDA').length;
+
+        // --- Desglose por biologico ---
+        // Agrupamos por el campo 'biologico' que viene del endpoint /fichas/turno/:id
+        const biologicos = ['SRP', 'SR', 'VPH'];
+        const desglose = biologicos.map(bio => {
+            const delBio = fichas.filter(f => f.biologico === bio);
+            return {
+                bio,
+                emitidas: delBio.length,
+                aplicadas: delBio.filter(f => f.estado === 'APLICADA').length,
+                pendientes: delBio.filter(f => f.estado === 'EMITIDA').length
+            };
+        });
+
+        // --- Ultimas 20 fichas (mas recientes primero) ---
+        // Ordenamos por id descendente como aproximacion a orden cronologico
+        const ultimas = [...fichas]
+            .sort((a, b) => b.id - a.id)
+            .slice(0, 20);
+
+        // Hora de la ultima actualizacion para transparencia
+        const ahora = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+
+        return `
+        <div class="vista-resumen">
+            <div class="resumen-header">
+                <h2>Resumen del Dia</h2>
+                <span class="resumen-timestamp">Actualizado: ${ahora} &nbsp;|&nbsp; Turno: ${this.state.turnoActivo.tipo}</span>
+            </div>
+
+            <!-- Tarjetas de conteos globales -->
+            <div class="resumen-cards">
+                <div class="resumen-card">
+                    <span class="resumen-card-valor">${emitidas}</span>
+                    <span class="resumen-card-label">Fichas emitidas</span>
+                </div>
+                <div class="resumen-card resumen-card--verde">
+                    <span class="resumen-card-valor">${aplicadas}</span>
+                    <span class="resumen-card-label">Aplicadas</span>
+                </div>
+                <div class="resumen-card resumen-card--amarillo">
+                    <span class="resumen-card-valor">${pendientes}</span>
+                    <span class="resumen-card-label">Pendientes</span>
+                </div>
+            </div>
+
+            <!-- Desglose por biologico -->
+            <div class="resumen-seccion">
+                <h3>Desglose por biologico</h3>
+                <table class="resumen-tabla">
+                    <thead>
+                        <tr>
+                            <th>Biologico</th>
+                            <th>Emitidas</th>
+                            <th>Aplicadas</th>
+                            <th>Pendientes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${desglose.map(d => `
+                            <tr>
+                                <td><strong>${d.bio}</strong></td>
+                                <td>${d.emitidas}</td>
+                                <td class="texto-verde">${d.aplicadas}</td>
+                                <td class="texto-amarillo">${d.pendientes}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Historial reciente -->
+            <div class="resumen-seccion">
+                <h3>Ultimas fichas emitidas</h3>
+                ${ultimas.length === 0 ? '<p class="empty-state">Sin fichas registradas aun.</p>' : `
+                    <table class="resumen-tabla">
+                        <thead>
+                            <tr>
+                                <th>Folio</th>
+                                <th>Hora</th>
+                                <th>Biologico</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${ultimas.map(f => {
+            const hora = f.created_at
+                ? new Date(f.created_at).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+                : '--';
+            const estadoClass = f.estado === 'APLICADA' ? 'badge-verde' : 'badge-amarillo';
+            return `
+                                    <tr>
+                                        <td>${f.folio || f.id}</td>
+                                        <td>${hora}</td>
+                                        <td>${f.biologico || '--'}</td>
+                                        <td><span class="badge ${estadoClass}">${f.estado}</span></td>
+                                    </tr>
+                                `;
+        }).join('')}
+                        </tbody>
+                    </table>
+                `}
+            </div>
+        </div>
+    `;
     }
 
     renderVistaFichas() {
