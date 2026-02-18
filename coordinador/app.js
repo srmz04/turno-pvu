@@ -788,19 +788,27 @@ class CoordinadorApp {
         }
 
         const turno = this.state.turnoActivo;
+        const totalInicial = (turno.srp_inicial || 0) + (turno.sr_inicial || 0) + (turno.vph_inicial || 0);
+        const totalEmitidas = (turno.srp_emitidas || 0) + (turno.sr_emitidas || 0) + (turno.vph_emitidas || 0);
+        const fichasRestantes = totalInicial - totalEmitidas;
 
         return `
             <div class="monitor-panel">
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="label">Fichas Emitidas</div>
-                        <div class="value">${turno.srp_emitidas + turno.sr_emitidas}</div>
+                        <div class="value">${turno.srp_emitidas + turno.sr_emitidas + (turno.vph_emitidas || 0)}</div>
                         <div class="subtext">Total del turno</div>
                     </div>
                     <div class="stat-card">
                         <div class="label">Vacunas Aplicadas</div>
-                        <div class="value">${turno.srp_aplicadas + turno.sr_aplicadas}</div>
+                        <div class="value">${turno.srp_aplicadas + turno.sr_aplicadas + (turno.vph_aplicadas || 0)}</div>
                         <div class="subtext">Total del turno</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Fichas Restantes</div>
+                        <div class="value ${fichasRestantes <= 10 ? 'texto-amarillo' : ''} ${fichasRestantes === 0 ? 'texto-rojo' : ''}">${fichasRestantes}</div>
+                        <div class="subtext">Biológicos disponibles</div>
                     </div>
                     <div class="stat-card">
                         <div class="label">VPH Aplicadas</div>

@@ -656,6 +656,11 @@
     font-weight: 600;
 }
 
+.texto-rojo {
+    color: #e74c3c;
+    font-weight: 600;
+}
+
 /* Badges de estado en la tabla de historial */
 .badge {
     display: inline-block;
