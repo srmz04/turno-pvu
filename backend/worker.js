@@ -622,14 +622,44 @@ async function handleAbrirTurno(request, env) {
   try {
     const fecha = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
-    // Verificar que no existe turno abierto del mismo tipo hoy
+    // Verificar si ya existe turno del mismo tipo hoy
     const existente = await env.TURNO_PVU_DB.prepare(`
-      SELECT id FROM turnos
-      WHERE centro_id = ? AND fecha = ? AND tipo = ? AND abierto = 1
+      SELECT id, abierto FROM turnos
+      WHERE centro_id = ? AND fecha = ? AND tipo = ?
     `).bind(authResult.centroId, fecha, tipo).first();
 
-    if (existente) {
+    if (existente && existente.abierto === 1) {
+      // Turno abierto -> impedir duplicado
       return errorResponse('Ya existe un turno ' + tipo + ' abierto hoy', 409, 'TURNO_DUPLICADO');
+    }
+
+    if (existente && existente.abierto === 0) {
+      // Turno cerrado -> reabrir con nuevos datos de inventario
+      await env.TURNO_PVU_DB.prepare(`
+        UPDATE turnos
+        SET abierto = 1, srp_inicial = ?, sr_inicial = ?, vph_inicial = ?,
+            srp_emitidas = 0, sr_emitidas = 0, vph_emitidas = 0,
+            srp_aplicadas = 0, sr_aplicadas = 0, vph_aplicadas = 0,
+            usuario_apertura = ?, ts_apertura = datetime('now')
+        WHERE id = ?
+      `).bind(srp_inicial, sr_inicial, vph_inicial, authResult.userId, existente.id).run();
+
+      const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+      await logAudit(env, authResult.userId, 'TURNO_REABIERTO', 'turno', existente.id,
+        JSON.stringify({ tipo, srp_inicial, sr_inicial, vph_inicial }), ip, request.headers.get('User-Agent'));
+
+      return jsonResponse({
+        success: true,
+        turno: {
+          id: existente.id,
+          centro_id: authResult.centroId,
+          fecha,
+          tipo,
+          srp_inicial,
+          sr_inicial,
+          vph_inicial
+        }
+      });
     }
 
     // Verificar fechas de caducidad de lotes (si se proporcionaron)
@@ -686,7 +716,7 @@ async function handleAbrirTurno(request, env) {
 
   } catch (error) {
     console.error('Abrir turno error:', error);
-    return errorResponse('Failed to open turno', 500);
+    return errorResponse('Failed to open turno: ' + (error.message || error), 500);
   }
 }
 
@@ -979,7 +1009,7 @@ async function handleEmitirFicha(request, env) {
   if (!body) return errorResponse('Request body required', 400);
 
   const errors = validateInput(body, {
-    edad_anios: { required: true, type: 'number', min: 0, max: 15 },
+    edad_anios: { required: true, type: 'number', min: 0, max: 19 },
     edad_meses: { required: true, type: 'number', min: 0, max: 11 },
     sexo: { required: true, type: 'string', enum: ['M', 'F'] },
     vph_tenia: { required: false, type: 'boolean' },
@@ -1022,14 +1052,14 @@ async function handleEmitirFicha(request, env) {
       return errorResponse('Edad menor a 6 meses - No autorizado', 400, 'EDAD_NO_AUTORIZADA');
     }
 
-    if (edad_anios > 12 || (edad_anios === 12 && edad_meses > 0)) {
+    if (edad_anios > 19) {
       // Registrar rechazo
       await env.TURNO_PVU_DB.prepare(`
         INSERT INTO rechazos (turno_id, edad_anios, edad_meses, sexo, motivo)
         VALUES (?, ?, ?, ?, ?)
-      `).bind(turno.id, edad_anios, edad_meses, sexo, 'MAYOR_12A').run();
+      `).bind(turno.id, edad_anios, edad_meses, sexo, 'MAYOR_19A').run();
 
-      return errorResponse('Edad mayor a 12 años - No autorizado', 400, 'EDAD_NO_AUTORIZADA');
+      return errorResponse('Edad mayor a 19 años - No autorizado', 400, 'EDAD_NO_AUTORIZADA');
     }
 
     // PASO 4: Determinar biológicos

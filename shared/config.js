@@ -74,7 +74,7 @@ export const CONFIG = {
     // Reglas de Negocio de Vacunacion (PRD 7.1, 7.2)
     VACCINATION_RULES: {
         MIN_AGE_MONTHS: 6,
-        MAX_AGE_YEARS: 12,
+        MAX_AGE_YEARS: 19,
 
         // SRP: 6 meses a 10 anos (inclusive 10 anos, 11 meses, 29 dias)
         // SR:  11 y 12 anos

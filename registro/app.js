@@ -175,7 +175,7 @@ class RegistroApp {
             <!-- Edad -->
             <div class="form-group">
               <label>Edad (Años)</label>
-              <input type="number" id="edad_anios" class="giant-input" min="0" max="15" required placeholder="0">
+              <input type="number" id="edad_anios" class="giant-input" min="0" max="19" required placeholder="0">
             </div>
             
             <div class="form-group">

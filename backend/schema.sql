@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS fichas (
     consecutivo INTEGER NOT NULL,
     
     -- Datos del paciente
-    edad_anios INTEGER NOT NULL CHECK (edad_anios >= 0 AND edad_anios <= 15),
+    edad_anios INTEGER NOT NULL CHECK (edad_anios >= 0 AND edad_anios <= 19),
     edad_meses INTEGER NOT NULL CHECK (edad_meses >= 0 AND edad_meses <= 11),
     sexo TEXT NOT NULL CHECK (sexo IN ('M','F')),
     
