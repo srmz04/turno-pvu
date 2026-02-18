@@ -31,14 +31,20 @@ class CoordinadorApp {
                 vph_inicial: 0
             },
             formCorteManual: {
+                srp_inicial: '',
+                sr_inicial: '',
+                vph_inicial: '',
                 srp_restantes: 0,
                 sr_restantes: 0,
                 vph_restantes: 0,
-                srp_aplicadas: 0,
-                sr_aplicadas: 0,
-                vph_aplicadas: 0,
-                fichas_distribuidas: 0,
-                fichas_entregadas: 0,
+                srp_aplicadas: '',
+                sr_aplicadas: '',
+                vph_aplicadas: '',
+                srp_entradas: '',
+                sr_entradas: '',
+                vph_entradas: '',
+                fichas_distribuidas: '',
+                fichas_entregadas: '',
                 notas: ''
             }
         };
@@ -465,14 +471,20 @@ class CoordinadorApp {
 
             // Limpiar form
             this.state.formCorteManual = {
+                srp_inicial: '',
+                sr_inicial: '',
+                vph_inicial: '',
                 srp_restantes: 0,
                 sr_restantes: 0,
                 vph_restantes: 0,
-                srp_aplicadas: 0,
-                sr_aplicadas: 0,
-                vph_aplicadas: 0,
-                fichas_distribuidas: 0,
-                fichas_entregadas: 0,
+                srp_aplicadas: '',
+                sr_aplicadas: '',
+                vph_aplicadas: '',
+                srp_entradas: '',
+                sr_entradas: '',
+                vph_entradas: '',
+                fichas_distribuidas: '',
+                fichas_entregadas: '',
                 notas: ''
             };
 
@@ -1046,9 +1058,22 @@ class CoordinadorApp {
                 <style>
                     .inventario-inputs-grid {
                         display: grid;
-                        grid-template-columns: min-content 1fr;
-                        gap: 10px;
+                        grid-template-columns: 70px 1fr;
+                        gap: 12px 10px;
                         align-items: center;
+                    }
+                    .inventario-inputs-grid input[type="number"] {
+                        width: 100%;
+                        font-size: 1.4rem;
+                        padding: 12px 10px;
+                        border: 2px solid #ddd;
+                        border-radius: 8px;
+                        text-align: center;
+                        box-sizing: border-box;
+                    }
+                    .inventario-inputs-grid input[type="number"]:focus {
+                        border-color: var(--primary-color, #2c3e50);
+                        outline: none;
                     }
                     .grid-header {
                         font-weight: bold;
@@ -1056,6 +1081,15 @@ class CoordinadorApp {
                         text-align: center;
                         padding-bottom: 5px;
                         color: #666;
+                    }
+                    .inventario-inputs input[type="number"] {
+                        width: 100%;
+                        font-size: 1.4rem;
+                        padding: 12px 10px;
+                        border: 2px solid #ddd;
+                        border-radius: 8px;
+                        text-align: center;
+                        box-sizing: border-box;
                     }
                 </style>
 
