@@ -1,0 +1,32 @@
+{
+  "name": "TURNO-PVU Aplicador",
+  "short_name": "Aplicador",
+  "description": "Módulo de aplicación de vacunas - Vacunador",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#00897b",
+  "orientation": "portrait",
+  "categories": ["health", "medical"],
+  "shortcuts": [
+    {
+      "name": "Aplicar Siguiente",
+      "short_name": "Siguiente",
+      "description": "Aplicar siguiente ficha en cola",
+      "url": "./index.html?action=next",
+      "icons": []
+    }
+  ],
+  "icons": [
+    {
+      "src": "../shared/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "../shared/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

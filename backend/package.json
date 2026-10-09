@@ -1,0 +1,26 @@
+{
+  "name": "turno-pvu-backend",
+  "version": "1.0.0",
+  "description": "Sistema de Gestión de Turnos para Puestos de Vacunación Universal - Backend",
+  "main": "worker.js",
+  "scripts": {
+    "dev": "wrangler dev --local",
+    "deploy": "wrangler deploy",
+    "deploy:dry-run": "wrangler deploy --dry-run",
+    "types": "wrangler types"
+  },
+  "keywords": [
+    "cloudflare-workers",
+    "vaccination",
+    "health",
+    "turno"
+  ],
+  "author": "Silvano Ramírez Soto",
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261009.1",
+    "wrangler": "4.149.0"
+  }
+}

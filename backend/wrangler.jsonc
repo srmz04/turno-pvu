@@ -1,0 +1,31 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "turno-pvu-backend",
+  "main": "worker.js",
+  "compatibility_date": "2026-10-09",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "ENVIRONMENT": "production"
+  },
+  "d1_databases": [
+    {
+      "binding": "TURNO_PVU_DB",
+      "database_name": "turno-pvu-db",
+      "database_id": "9299c5ac-6f7a-4cee-964c-078ee4270425",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "TURNO_PVU_CACHE",
+      "id": "a154b6842d85404ba9c5d5ed43e05829"
+    }
+  ],
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1
+    }
+  }
+}
